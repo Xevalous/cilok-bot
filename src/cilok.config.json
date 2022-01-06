@@ -1,0 +1,43 @@
+{
+	"botName": "CilokBot",
+	"ownerName": "VEXG",
+	"ownerNumber": ["4365066999977", "6289679070459"],
+	"reportNumber": "6289679070459@s.whatsapp.net",
+	"prefix": ["!!"],
+	"database": "",
+	"unicode": {
+		"list": "◈",
+		"wings": ["*_「_*   ", "  *_」_*"]
+	},
+	"groupMess": {
+		"welcome": "Hai %@user%! selamat datang di grup *%@subject%*",
+		"leave": "Selamat tinggal %@user%",
+		"promote": "Selamat %@user% kamu telah naik pangkat",
+		"demote": "Yahh %@user% di demote wkwkwkwk"
+	},
+	"games": {
+		"caklontong": 25,
+		"tebakgambar": 25
+	},
+	"response": {
+		"owner": "*REJECTED* | Perintah ini khusus owner",
+		"admin": "*REJECTED* | Perintah ini hanya bisa diakses oleh Admin",
+		"group": "*REJECTED* | Perintah ini hanya bisa di gunakan dalam grup",
+		"wait": "*WAIT* | Sedang di proses...",
+		"private": "*REJECTED* | Perintah ini hanya bisa di gunakan dalam private chat",
+		"notUrl": "*REJECTED* | Link Invalid",
+		"media": "*REJECTED* | Pesan harus bersifat media",
+		"media_": "*REJECTED* | Pesan harus bersifat",
+		"media__": "*REJECTED* | Kirim pesan media / tag pesan yang terdapat media",
+		"mentioned": "*REJECTED* | Tag orang yang ingin di target",
+		"quoted": "*REJECTED* | Reply pesan yang ingin di target",
+		"quoted_": "*REJECTED* | Reply pesan yang bersifat",
+		"quotedMedia": "*REJECTED* | Reply pesan/kirim pesan yang bersifat",
+		"error": "*ERROR* | Terjadi kesalahan pada saat melakukan perintah",
+		"fromMe": "*REJECTED* | Pesan yang di balas harus dari bot",
+		"botAdmin": "*PERMISSION* | Bot harus menjadi admin untuk melakukan perintah ini",
+		"spam": "*SPAM DETECTED* | Tunggu 5 detik agar bisa menggunakan command lagi",
+		"limitTrue": "*REJECTED* | Limit download kamu sudah habis dan akan di reset pada jam 24.00, untuk selengkapnya silahkan ketik */infolimit*",
+		"help": ", ketik \"/helpcmd\" untuk mengetahui cara menggunakan fitur di setiap command"
+	}
+}
