@@ -1,10 +1,9 @@
 {
 	"botName": "CilokBot",
 	"ownerName": "VEXG",
-	"ownerNumber": ["4365066999977", "6289679070459"],
-	"reportNumber": "6289679070459@s.whatsapp.net",
-	"prefix": ["!!"],
-	"database": "",
+	"ownerNumber": ["112234"],
+	"reportNumber": "112234@s.whatsapp.net",
+	"prefix": ["#"],
 	"unicode": {
 		"list": "◈",
 		"wings": ["*_「_*   ", "  *_」_*"]
@@ -14,10 +13,6 @@
 		"leave": "Selamat tinggal %@user%",
 		"promote": "Selamat %@user% kamu telah naik pangkat",
 		"demote": "Yahh %@user% di demote wkwkwkwk"
-	},
-	"games": {
-		"caklontong": 25,
-		"tebakgambar": 25
 	},
 	"response": {
 		"owner": "*REJECTED* | Perintah ini khusus owner",
