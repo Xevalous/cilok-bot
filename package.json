@@ -1,12 +1,11 @@
 {
 	"name": "cilok-v2-md",
-	"version": "2.0.01",
-	"description": "Whatsapp bot",
+	"version": "2.1",
+	"description": "A whatsApp bot for whatsApp multi-device",
 	"main": "index.js",
 	"scripts": {
 		"start": "node index.js"
 	},
-	"keywords": [],
 	"author": "VEXG",
 	"devDependencies": {
 		"eslint": "^7.32.0",
