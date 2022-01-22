@@ -33,6 +33,6 @@
 		"botAdmin": "*PERMISSION* | Bot harus menjadi admin untuk melakukan perintah ini",
 		"spam": "*SPAM DETECTED* | Tunggu 5 detik agar bisa menggunakan command lagi",
 		"limitTrue": "*REJECTED* | Limit download kamu sudah habis dan akan di reset pada jam 24.00, untuk selengkapnya silahkan ketik */infolimit*",
-		"help": ", ketik \"/helpcmd\" untuk mengetahui cara menggunakan fitur di setiap command"
+		"help": ", ketik \"</prefix>helpcmd\" untuk mengetahui cara menggunakan fitur di setiap command"
 	}
 }
