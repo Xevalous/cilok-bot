@@ -31,7 +31,7 @@ export default async function CreateConnection() {
 						statusCode === DisconnectReason.loggedOut ||
 						statusCode === DisconnectReason.restartRequired
 					) {
-						return global.util.run();
+						return CreateConnection();
 					}
 			}
 		});
