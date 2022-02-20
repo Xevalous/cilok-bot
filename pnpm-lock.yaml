@@ -5,6 +5,7 @@ specifiers:
   '@adiwajshing/keyed-db': ^0.2.4
   '@hapi/boom': ^9.1.4
   '@types/fluent-ffmpeg': ^2.1.20
+  '@types/node-cron': ^3.0.1
   axios: ^0.26.0
   chalk: 4.1.2
   cheerio: ^1.0.0-rc.10
@@ -14,6 +15,7 @@ specifiers:
   form-data: ^4.0.0
   fs: ^0.0.1-security
   jimp: ^0.16.1
+  node-cron: ^3.0.0
   pino: ^7.6.5
   qrcode-terminal: ^0.12.0
   sharp: 0.29.3
@@ -32,6 +34,7 @@ dependencies:
   form-data: 4.0.0
   fs: 0.0.1-security
   jimp: 0.16.1
+  node-cron: 3.0.0
   pino: 7.6.5
   qrcode-terminal: 0.12.0
   sharp: 0.29.3
@@ -39,6 +42,7 @@ dependencies:
 
 devDependencies:
   '@types/fluent-ffmpeg': 2.1.20
+  '@types/node-cron': 3.0.1
 
 packages:
 
@@ -522,6 +526,10 @@ packages:
   /@types/long/4.0.1:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
     dev: false
+
+  /@types/node-cron/3.0.1:
+    resolution: {integrity: sha512-BkMHHonDT8NJUE/pQ3kr5v2GLDKm5or9btLBoBx4F2MB2cuqYC748LYMDC55VlrLI5qZZv+Qgc3m4P3dBPcmeg==}
+    dev: true
 
   /@types/node/10.17.60:
     resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
@@ -1272,6 +1280,16 @@ packages:
       minimist: 1.2.5
     dev: false
 
+  /moment-timezone/0.5.34:
+    resolution: {integrity: sha512-3zAEHh2hKUs3EXLESx/wsgw6IQdusOT8Bxm3D9UrHPQR7zlMmzwybC8zHEM1tQ4LJwP7fcxrWr8tuBg05fFCbg==}
+    dependencies:
+      moment: 2.29.1
+    dev: false
+
+  /moment/2.29.1:
+    resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
+    dev: false
+
   /ms/2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
     dev: false
@@ -1311,6 +1329,13 @@ packages:
     engines: {node: '>= 8.0.0'}
     dependencies:
       clone: 2.1.2
+    dev: false
+
+  /node-cron/3.0.0:
+    resolution: {integrity: sha512-DDwIvvuCwrNiaU7HEivFDULcaQualDv7KoNlB/UU1wPW0n1tDEmBJKhEIE6DlF2FuoOHcNbLJ8ITL2Iv/3AWmA==}
+    engines: {node: '>=6.0.0'}
+    dependencies:
+      moment-timezone: 0.5.34
     dev: false
 
   /npmlog/4.1.2:

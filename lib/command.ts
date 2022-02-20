@@ -73,6 +73,7 @@ export default class Command {
 		mess: IProto,
 		event: string | boolean,
 		responseKey: string,
+		prefix?: string,
 	): proto.WebMessageInfo | void => {
 		const resultResponse =
 			typeof event === 'boolean'
@@ -86,7 +87,12 @@ export default class Command {
 		global.client.reply(
 			mess,
 			(!['wait'].includes(responseKey)
-				? resultResponse + global.config.response.help.replace('</prefix>', `${this.prefix}`)
+				? resultResponse +
+				  (['owner'].includes(responseKey)
+						? prefix
+							? global.config.response.help.replace('</prefix>', prefix)
+							: ''
+						: '')
 				: resultResponse) as string,
 		);
 	};
@@ -94,8 +100,10 @@ export default class Command {
 	public getAccess = (mess: IProto, event: ICommandContent): proto.WebMessageInfo | 200 | void => {
 		const EV = event.event;
 
-		if (!((EV as ICommand).owner && mess.isOwner))
-			return this.action(mess, (EV as ICommand).owner!, 'owner');
+		if (!((EV as ICommand)?.owner && mess.isOwner))
+			return this.action(mess, (EV as ICommand).owner!, 'owner', event.prefix);
+
+		return 200;
 	};
 
 	private getCommand = (key: string): ICommandContent | {} => {
