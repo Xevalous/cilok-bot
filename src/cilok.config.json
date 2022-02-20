@@ -1,7 +1,7 @@
 {
 	"botName": "CilokBot",
 	"ownerName": "VEXG",
-	"ownerNumber": ["6289679070459"],
+	"ownerNumber": ["99999"],
 	"prefix": ["!", "/"],
 	"tempDir": "./temp/",
 	"unicode": {
