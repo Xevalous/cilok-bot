@@ -1,5 +1,12 @@
-import { GroupMetadata, proto } from '@adiwajshing/baileys';
 import { Readable } from 'form-data';
+import {
+	AnyMessageContent,
+	GroupMetadata,
+	MiscMessageGenerationOptions,
+	proto,
+} from '@adiwajshing/baileys';
+
+export type IContent = AnyMessageContent & MiscMessageGenerationOptions;
 
 export type IBuffer =
 	| string
@@ -46,4 +53,9 @@ export interface IQuoted {
 		participant: string | null | undefined;
 	};
 	message: proto.IMessage | null | undefined;
+}
+
+export interface IStickerConfig {
+	buffer: IBuffer;
+	exif: string;
 }

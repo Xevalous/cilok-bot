@@ -1,13 +1,8 @@
 import Client from '../client';
-import config from '../../src/cilok.config.json';
 import Command from '../command';
 
-type IConfig = typeof config;
-
-export type ValueOf<T> = T[keyof T];
-
 declare global {
-	var config: IConfig;
+	var config: typeof import('../../src/cilok.config.json');
 	var util: typeof import('../utilities');
 	var database: {
 		[k: string]: any;

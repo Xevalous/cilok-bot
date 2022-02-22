@@ -103,6 +103,9 @@ export default class Command {
 		if (!((EV as ICommand)?.owner && mess.isOwner))
 			return this.action(mess, (EV as ICommand).owner!, 'owner', event.prefix);
 
+		if (!((EV as ICommand)?.group && mess.isGroup))
+			return this.action(mess, (EV as ICommand).group!, 'group', event.prefix);
+
 		return 200;
 	};
 

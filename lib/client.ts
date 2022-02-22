@@ -3,7 +3,7 @@ import Ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { Readable } from 'form-data';
 import { fromBuffer } from 'file-type';
-import { IBuffer, IProto, IQuoted } from './typings/client.declare';
+import { IBuffer, IContent, IProto, IQuoted, IStickerConfig } from './typings/client.declare';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import * as baileys from '@adiwajshing/baileys';
 
@@ -28,7 +28,7 @@ export default class Client {
 
 	public send = async (
 		mess: IProto,
-		content: baileys.AnyMessageContent & baileys.MiscMessageGenerationOptions,
+		content: IContent,
 	): Promise<baileys.WAProto.WebMessageInfo> => {
 		try {
 			let property: Record<string, any> = content;
@@ -80,13 +80,12 @@ export default class Client {
 
 	public sendSticker = async (
 		mess: IProto,
-		content: { buffer: IBuffer; exif: string } & baileys.AnyMessageContent &
-			baileys.MiscMessageGenerationOptions,
+		content: IStickerConfig | IContent,
 	): Promise<baileys.WAProto.WebMessageInfo> =>
 		this.send(mess, {
 			sticker: (await this.prepareSticker(
-				content.buffer,
-				content.exif ?? './src/misc/cilokS.exif',
+				(content as IStickerConfig).buffer,
+				(content as IStickerConfig).exif ?? './src/misc/cilokS.exif',
 			)) as baileys.WAMediaUpload,
 			...content,
 		});
@@ -171,7 +170,7 @@ export default class Client {
 		}
 	};
 
-	public metadata = (mess: baileys.proto.IWebMessageInfo) => {
+	public metadata = (mess: baileys.proto.IWebMessageInfo): Promise<IProto> => {
 		async function fallback(mess: baileys.proto.IWebMessageInfo) {
 			const proto: IProto = {} as IProto;
 

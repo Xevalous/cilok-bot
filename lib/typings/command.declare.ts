@@ -38,4 +38,5 @@ export declare interface ICommandContent {
 
 declare interface ICommandOptions {
 	owner?: boolean | string;
+	group?: boolean | string;
 }

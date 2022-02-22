@@ -74,6 +74,7 @@ export async function run(): Promise<void> {
 		global.util = await import('./utilities');
 
 		global.database = {};
+		if (!existsSync('./src/database')) mkdirSync('./src/database');
 		for (const a of readdirSync('./src/database/')) {
 			global.database[a.replace('.json', '')] = (await import(`../src/database/${a}`)).default;
 		}

@@ -15,7 +15,7 @@ global.command.on(
 		}
 	},
 	{
-		owner: '--noresp',
+		owner: true,
 		prefix: false,
 	},
 );
