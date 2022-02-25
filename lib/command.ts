@@ -99,12 +99,14 @@ export default class Command {
 
 	public getAccess = (mess: IProto, event: ICommandContent): proto.WebMessageInfo | 200 | void => {
 		const EV = event.event;
+		let CONFIG!: [string | boolean, string];
 
-		if (!((EV as ICommand)?.owner && mess.isOwner))
-			return this.action(mess, (EV as ICommand).owner!, 'owner', event.prefix);
+		if (!((EV as ICommand)?.owner && mess.isOwner)) CONFIG = [(EV as ICommand).owner!, 'owner'];
 
-		if (!((EV as ICommand)?.group && mess.isGroup))
-			return this.action(mess, (EV as ICommand).group!, 'group', event.prefix);
+		if (!((EV as ICommand)?.group && mess.isGroup)) CONFIG = [(EV as ICommand).group!, 'group'];
+
+		if (typeof CONFIG === 'object' && CONFIG.length > 0)
+			return this.action(mess, CONFIG[0], CONFIG[1], event.prefix);
 
 		return 200;
 	};

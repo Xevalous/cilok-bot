@@ -1,6 +1,8 @@
 .env
 node_modules
-!commands/owner.ts
-test/*.ts
-commands/*.ts
-database/*.json
+!lib/commands/owner.ts
+src/database/*.json
+lib/test/*
+lib/addons/*
+lib/commands/*
+lib/typings/*.addons.declare.ts
