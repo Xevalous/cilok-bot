@@ -65,7 +65,7 @@ export default class Command {
 				});
 			}
 		} catch (e) {
-			throw global.util.logger.error(e);
+			throw global.util.logger.format(e);
 		}
 	};
 
@@ -101,9 +101,9 @@ export default class Command {
 		const EV = event.event;
 		let CONFIG!: [string | boolean, string];
 
-		if (!((EV as ICommand)?.owner && mess.isOwner)) CONFIG = [(EV as ICommand).owner!, 'owner'];
+		if ((EV as ICommand)?.owner && !mess.isOwner) CONFIG = [(EV as ICommand).owner!, 'owner'];
 
-		if (!((EV as ICommand)?.group && mess.isGroup)) CONFIG = [(EV as ICommand).group!, 'group'];
+		if ((EV as ICommand)?.group && !mess.isGroup) CONFIG = [(EV as ICommand).group!, 'group'];
 
 		if (typeof CONFIG === 'object' && CONFIG.length > 0)
 			return this.action(mess, CONFIG[0], CONFIG[1], event.prefix);

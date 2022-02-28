@@ -6,9 +6,9 @@ import {
 	proto,
 } from '@adiwajshing/baileys';
 
-export type IContent = AnyMessageContent & MiscMessageGenerationOptions;
+export declare type IContent = AnyMessageContent & MiscMessageGenerationOptions;
 
-export type IBuffer =
+export declare type IBuffer =
 	| string
 	| number
 	| Readable
@@ -16,7 +16,24 @@ export type IBuffer =
 	| { valueOf(): string | Uint8Array | readonly number[] }
 	| URL;
 
-export interface IProto extends proto.IWebMessageInfo {
+export declare type IButtonConfig = { value: string } & (
+	| {
+			reply: string;
+	  }
+	| {
+			url: string;
+	  }
+	| {
+			call: string;
+	  }
+	| {
+			title?: string;
+			description?: string;
+			listTitle?: string;
+	  }
+);
+
+export declare interface IProto extends proto.IWebMessageInfo {
 	sender: {
 		jid: string | null | undefined;
 		name: string | null | undefined;
@@ -45,7 +62,7 @@ export interface IProto extends proto.IWebMessageInfo {
 	deleteMsg: (forAll?: boolean) => Promise<proto.WebMessageInfo>;
 }
 
-export interface IQuoted {
+export declare interface IQuoted {
 	key: {
 		remoteJid: string | null | undefined;
 		fromMe: boolean;
@@ -55,7 +72,7 @@ export interface IQuoted {
 	message: proto.IMessage | null | undefined;
 }
 
-export interface IStickerConfig {
+export declare interface IStickerConfig {
 	buffer: IBuffer;
 	exif: string;
 }

@@ -56,6 +56,6 @@ export default async function CreateConnection() {
 
 		return new Client(socket);
 	} catch (e) {
-		throw global.util.logger.error(e);
+		throw global.util.logger.format(e);
 	}
 }

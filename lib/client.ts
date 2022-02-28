@@ -3,7 +3,14 @@ import Ffmpeg from 'fluent-ffmpeg';
 import { exec } from 'child_process';
 import { Readable } from 'form-data';
 import { fromBuffer } from 'file-type';
-import { IBuffer, IContent, IProto, IQuoted, IStickerConfig } from './typings/client.declare';
+import {
+	IBuffer,
+	IButtonConfig,
+	IContent,
+	IProto,
+	IQuoted,
+	IStickerConfig,
+} from './typings/client.declare';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import * as baileys from '@adiwajshing/baileys';
 
@@ -34,7 +41,7 @@ export default class Client {
 			let property: Record<string, any> = content;
 
 			const type = Object.keys(property).find((a) => this.messageType[a]);
-			if (!type) throw global.util.logger.error('The type is not defined');
+			if (!type) throw global.util.logger.format(new Error('The type is not defined'));
 			const mediaKey = ['document', 'video', 'audio', 'image', 'sticker'];
 
 			if (
@@ -44,10 +51,10 @@ export default class Client {
 				const bufferData = await this.getBuffer(property[type as keyof baileys.AnyMessageContent]);
 
 				if (type === 'image') {
-					property.caption = property?.text
-						? (property.text as string)
+					(property.caption as string) = property?.text
+						? property.text
 						: property?.caption
-						? (property.caption as string)
+						? property.caption
 						: '';
 					delete property?.text;
 				}
@@ -74,7 +81,7 @@ export default class Client {
 				property as baileys.MiscMessageGenerationOptions,
 			);
 		} catch (e) {
-			throw global.util.logger.error(e);
+			throw global.util.logger.format(e);
 		}
 	};
 
@@ -90,8 +97,67 @@ export default class Client {
 			...content,
 		});
 
+	public sendButton = async (
+		mess: IProto,
+		content: IContent,
+		buttons: IButtonConfig[],
+	): Promise<baileys.WAProto.WebMessageInfo> => {
+		try {
+			function parseBtn(type: string, object: IButtonConfig) {
+				return 'title' in object
+					? ({
+							...object,
+							title: object.listTitle ?? undefined,
+							rowId: object.value ?? undefined,
+					  } as {
+							title?: string | null;
+							description?: string | null;
+							rowId?: string | null;
+					  })
+					: ({
+							[type.includes('reply') ? 'quickReplyButton' : type + 'Button']: {
+								displayText: object[type as keyof IButtonConfig],
+								[type.includes('reply') ? 'id' : type.includes('call') ? 'phoneNumber' : type]:
+									object.value ?? '',
+							},
+					  } as baileys.proto.IHydratedTemplateButton);
+			}
+
+			let hasList = false;
+			let buttonsData: baileys.proto.IHydratedTemplateButton[] | baileys.proto.ISection[] = [];
+
+			for (const a of buttons) {
+				const type = Object.keys(a)
+					.find((c) => c !== 'value')
+					?.toLowerCase();
+				const parse = type ? parseBtn(type, a) : undefined;
+
+				if ('title' in a) {
+					hasList = true;
+					const rows: baileys.WAProto.IRow[] = [];
+					rows.push(parse as baileys.WAProto.IRow);
+					buttonsData.push({
+						rows,
+						title: a.title,
+					});
+				} else {
+					buttonsData = (buttonsData as baileys.proto.IHydratedTemplateButton[]).concat(
+						parse as baileys.proto.IHydratedTemplateButton[],
+					);
+				}
+			}
+
+			return this.send(mess, {
+				...content,
+				...{ [hasList ? 'sections' : 'templateButtons']: buttonsData },
+			});
+		} catch (e) {
+			throw global.util.logger.format(e);
+		}
+	};
+
 	public reply = async (mess: IProto, text: string): Promise<baileys.WAProto.WebMessageInfo> =>
-		this.send(mess, { text: global.util.logger.error(text), quoted: mess });
+		this.send(mess, { text: global.util.logger.format(text), quoted: mess });
 
 	public downloadMessage = async (mess: IProto, filename: string) => {
 		try {
@@ -101,13 +167,13 @@ export default class Client {
 			);
 			return this.getBuffer(
 				await this.baileys.downloadContentFromMessage(
-					(mess as Record<string, any>)[type!],
+					mess[type as keyof IProto] as baileys.DownloadableMessage,
 					(type as string).replace(/Message/i, '').trim() as baileys.MediaType,
 				),
 				filename,
 			);
 		} catch (e) {
-			throw e;
+			throw global.util.logger.format(e);
 		}
 	};
 
@@ -166,7 +232,7 @@ export default class Client {
 				...template,
 			};
 		} catch (e) {
-			throw global.util.logger.error(e);
+			throw global.util.logger.format(e);
 		}
 	};
 
@@ -341,7 +407,7 @@ export default class Client {
 			return Ffmpeg(input)
 				.on('error', (e) => {
 					unlinkSync(input);
-					throw global.util.logger.error(e);
+					throw global.util.logger.format(new Error(e));
 				})
 				.addInputOptions([
 					'-vcodec',
@@ -354,7 +420,7 @@ export default class Client {
 				.on('end', () => {
 					if (exifPath) {
 						return exec(`webpmux -set exif=${exifPath} ${output} ${output}`, (e) => {
-							if (e) throw global.util.logger.error(e);
+							if (e) throw global.util.logger.format(e);
 							const saver = readFileSync(output);
 							unlinkSync(input);
 							unlinkSync(output);
@@ -368,7 +434,7 @@ export default class Client {
 					}
 				});
 		} catch (e) {
-			throw global.util.logger.error(e);
+			throw global.util.logger.format(e);
 		}
 	};
 }

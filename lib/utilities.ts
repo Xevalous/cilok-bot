@@ -95,14 +95,14 @@ export async function run(): Promise<void> {
 			? logger.command(`Succesfully loaded ${global.command.commandList.length} commands`)
 			: logger.warn('There is no command loaded');
 	} catch (e) {
-		throw logger.error(e);
+		throw global.util.logger.format(e);
 	}
 }
 
 export const logger = {
+	format: (message: any) => format(message),
 	info: (message: any) => console.log(`${chalk.blueBright.bold('INFO')} | ${format(message)}`),
 	warn: (message: any) => console.log(`${chalk.yellowBright.bold('WARNING')} | ${format(message)}`),
-	error: (message: any) => format(message),
 	command: (message: any) =>
 		console.log(`${chalk.hex('#6ca8fc').bold('COMMAND')} | ${format(message)}`),
 	database: (message: any) =>

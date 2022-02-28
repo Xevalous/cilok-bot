@@ -16,5 +16,5 @@ try {
 	});
 	run();
 } catch (e) {
-	throw logger.error(e);
+	throw logger.format(e);
 }
