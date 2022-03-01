@@ -10,6 +10,10 @@ export async function delay(ms: number): Promise<void> {
 	new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function wings(text: string) {
+	return `${config.unicode.wings[0]}*${text.trim()}*${config.unicode.wings[1]}`;
+}
+
 export function isUrl(text: string): boolean {
 	return /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)/gi.test(
 		text,
@@ -62,6 +66,75 @@ export async function waVersion(): Promise<[number, number, number]> {
 	}
 }
 
+export function parseJson(
+	json: object,
+	options: {
+		ignoreValue?: any[];
+		ignoreKey?: string[];
+		header?: string;
+		body?: string;
+		footer?: string;
+		preResult?: boolean;
+	},
+): string | string[][] {
+	if (Object.entries(json).length === 0) throw new Error('No json input provided');
+	const opt = {
+		ignoreValue: [null, undefined],
+		ignoreKey: [],
+		header: '',
+		body: `${global.config.unicode.list} *%key :* %value`,
+		footer: '------------',
+		preResult: false,
+		...options,
+	};
+	const content: string[][] = [];
+	for (const [a, b] of Object.entries(json)) {
+		if (opt.ignoreValue.indexOf(b) !== -1) continue;
+		const key = a
+			.replace(/[A-Z_]/g, (a) => a.replace(a, ` ${a !== '_' ? a.toLowerCase() : ''}`))
+			.replace(/^\w/, (c) => c.toUpperCase());
+		const type = typeof b;
+		if (opt.ignoreKey && (opt.ignoreKey as string[]).includes(a)) continue;
+		switch (type) {
+			case 'boolean':
+				content.push([key, b ? 'Ya' : 'Tidak']);
+				break;
+			case 'object':
+				if (Array.isArray(b)) {
+					content.push([key, b.join(', ')]);
+				} else {
+					content.push([
+						key,
+						parseJson(b, {
+							ignoreKey: opt.ignoreKey,
+							preResult: true,
+						}) as string,
+					]);
+				}
+				break;
+			default:
+				content.push([key, b]);
+				break;
+		}
+	}
+	if (opt.preResult) return content;
+	const compile: string[] = [
+		opt.header === ''
+			? '' + '\n'
+			: `${global.config.unicode.wings[0]}*${opt.header}*${global.config.unicode.wings[1]}\n`,
+		content
+			.map((a) => {
+				return opt.body
+					.replace(/%key/g, a[0])
+					.replace(/%value/g, a[1])
+					.trim();
+			})
+			.join('\n'),
+		Array.isArray(json) ? `\n\n${opt.footer}\n` : '',
+	];
+	return compile.join('');
+}
+
 export async function run(): Promise<void> {
 	try {
 		console.clear();
@@ -95,7 +168,7 @@ export async function run(): Promise<void> {
 			? logger.command(`Succesfully loaded ${global.command.commandList.length} commands`)
 			: logger.warn('There is no command loaded');
 	} catch (e) {
-		throw global.util.logger.format(e);
+		throw util.logger.format(e);
 	}
 }
 

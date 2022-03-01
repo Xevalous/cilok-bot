@@ -10,29 +10,22 @@ export default class Command {
 	constructor() {
 		this.commandList = [];
 		this.tag = {};
-		this.prefix = global.config.prefix.map((a) =>
-			(a as any) instanceof RegExp ? a : new RegExp(`^(${global.util.parseRegex(a)})`, 'i'),
+		this.prefix = config.prefix.map((a) =>
+			(a as any) instanceof RegExp ? a : new RegExp(`^(${util.parseRegex(a)})`, 'i'),
 		);
 	}
 
 	public on = (
 		command: string[],
 		tag: string[],
-		callback: (
-			mess: IProto,
-			call: ICommandContent & {
-				client: typeof global.client;
-				util: typeof import('./utilities');
-				config: typeof global.config;
-			},
-		) => Promise<any> | any,
+		callback: (mess: IProto, call: ICommandContent) => Promise<any> | any,
 		options?: object,
 	): void => {
 		const EV: ICommand = {
 			name: command[0].toString(),
 			command: command.map((a) => a, toString()),
 			commandEXP: command.map((a) =>
-				(a as any) instanceof RegExp ? a : new RegExp(`^(${global.util.parseRegex(a)})`, 'i'),
+				(a as any) instanceof RegExp ? a : new RegExp(`^(${util.parseRegex(a)})`, 'i'),
 			),
 			tag,
 			help: 'Tidak ada informasi bantuan!',
@@ -59,13 +52,10 @@ export default class Command {
 			if (access === 200) {
 				(EV.event as ICommand).callback(mess, {
 					...EV,
-					client: global.client,
-					util: global.util,
-					config: global.config,
 				});
 			}
 		} catch (e) {
-			throw global.util.logger.format(e);
+			throw util.logger.format(e);
 		}
 	};
 
@@ -74,39 +64,50 @@ export default class Command {
 		event: string | boolean,
 		responseKey: string,
 		prefix?: string,
-	): proto.WebMessageInfo | void => {
+	): Promise<proto.WebMessageInfo> | void => {
 		const resultResponse =
 			typeof event === 'boolean'
-				? (global.config.response as Record<string, string[] | string | number>)[responseKey]
+				? (config.response as Record<string, string[] | string | number>)[responseKey]
 				: event.includes('?>')
-				? `${(global.config.response as Record<string, string[] | string | number>)[responseKey]} ${
+				? `${(config.response as Record<string, string[] | string | number>)[responseKey]} ${
 						event.split('?>')[1]
 				  }`
 				: event;
 		if (resultResponse === '--noresp') return;
-		global.client.reply(
+		return client.reply(
 			mess,
 			(!['wait'].includes(responseKey)
 				? resultResponse +
 				  (['owner'].includes(responseKey)
 						? prefix
-							? global.config.response.help.replace('</prefix>', prefix)
+							? config.response.help.replace('</prefix>', prefix)
 							: ''
 						: '')
 				: resultResponse) as string,
 		);
 	};
 
-	public getAccess = (mess: IProto, event: ICommandContent): proto.WebMessageInfo | 200 | void => {
-		const EV = event.event;
+	public getAccess = (
+		mess: IProto,
+		event: ICommandContent,
+	): void | Promise<proto.WebMessageInfo> | 200 => {
 		let CONFIG!: [string | boolean, string];
 
-		if ((EV as ICommand)?.owner && !mess.isOwner) CONFIG = [(EV as ICommand).owner!, 'owner'];
+		if ((event.event as ICommand)?.query && event.query.length === 0)
+			CONFIG = [(event.event as ICommand).query!, 'query'];
 
-		if ((EV as ICommand)?.group && !mess.isGroup) CONFIG = [(EV as ICommand).group!, 'group'];
+		if ((event.event as ICommand)?.group && !mess.isGroup)
+			CONFIG = [(event.event as ICommand).group!, 'group'];
 
-		if (typeof CONFIG === 'object' && CONFIG.length > 0)
+		if ((event.event as ICommand)?.owner && !mess.isOwner)
+			CONFIG = [(event.event as ICommand).owner!, 'owner'];
+
+		if (typeof CONFIG === 'object' && CONFIG.length > 0) {
 			return this.action(mess, CONFIG[0], CONFIG[1], event.prefix);
+		}
+
+		if ((event.event as ICommand)?.wait)
+			this.action(mess, (event.event as ICommand).wait as boolean | string, 'wait');
 
 		return 200;
 	};

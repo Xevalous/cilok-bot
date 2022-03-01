@@ -6,7 +6,10 @@ import {
 	proto,
 } from '@adiwajshing/baileys';
 
-export declare type IContent = AnyMessageContent & MiscMessageGenerationOptions;
+export declare type IContent =
+	| (AnyMessageContent & MiscMessageGenerationOptions)
+	| { image: string }
+	| { filename: string };
 
 export declare type IBuffer =
 	| string
@@ -41,7 +44,7 @@ export declare interface IProto extends proto.IWebMessageInfo {
 	client: {
 		name: string | undefined;
 		jid: string;
-	};
+	} & { id: string; admin: boolean | null };
 	isGroup: boolean;
 	isOwner: boolean;
 	isText: boolean;
@@ -58,7 +61,7 @@ export declare interface IProto extends proto.IWebMessageInfo {
 	body: proto.IMessage[keyof proto.IMessage];
 	data: string[];
 	groupData: GroupMetadata | undefined;
-	downloadMsg: (filename?: string) => ReturnType<typeof global.client.downloadMessage>;
+	downloadMsg: (filename?: string) => ReturnType<typeof client.downloadMessage>;
 	deleteMsg: (forAll?: boolean) => Promise<proto.WebMessageInfo>;
 }
 

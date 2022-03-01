@@ -7,14 +7,7 @@ export declare interface ICommand extends ICommandOptions {
 	tag: string[];
 	help: string;
 	index?: number;
-	callback: (
-		mess: IProto,
-		call: ICommandContent & {
-			client: typeof global.client;
-			util: typeof import('../utilities');
-			config: typeof global.config;
-		},
-	) => Promise<any> | any;
+	callback: (mess: IProto, call: ICommandContent) => Promise<any> | any;
 	prefix: boolean;
 	enable: boolean;
 }
@@ -37,6 +30,8 @@ export declare interface ICommandContent {
 }
 
 declare interface ICommandOptions {
+	wait?: boolean | string;
+	query?: string;
 	owner?: boolean | string;
 	group?: boolean | string;
 }

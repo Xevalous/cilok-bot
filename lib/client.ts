@@ -34,14 +34,14 @@ export default class Client {
 	}
 
 	public send = async (
-		mess: IProto,
+		mess: IProto | string,
 		content: IContent,
 	): Promise<baileys.WAProto.WebMessageInfo> => {
 		try {
 			let property: Record<string, any> = content;
 
 			const type = Object.keys(property).find((a) => this.messageType[a]);
-			if (!type) throw global.util.logger.format(new Error('The type is not defined'));
+			if (!type) throw util.logger.format(new Error('The type is not defined'));
 			const mediaKey = ['document', 'video', 'audio', 'image', 'sticker'];
 
 			if (
@@ -63,7 +63,7 @@ export default class Client {
 					mimetype: (property?.mimetype
 						? property.mimetype
 						: type === 'audio'
-						? 'audio/mp4'
+						? 'audio/mpeg'
 						: bufferData.mime) as string,
 					fileName: (!property?.filename
 						? `${Date.now()}.${bufferData.ext}`
@@ -81,7 +81,7 @@ export default class Client {
 				property as baileys.MiscMessageGenerationOptions,
 			);
 		} catch (e) {
-			throw global.util.logger.format(e);
+			throw util.logger.format(e);
 		}
 	};
 
@@ -152,14 +152,25 @@ export default class Client {
 				...{ [hasList ? 'sections' : 'templateButtons']: buttonsData },
 			});
 		} catch (e) {
-			throw global.util.logger.format(e);
+			throw util.logger.format(e);
 		}
 	};
 
 	public reply = async (mess: IProto, text: string): Promise<baileys.WAProto.WebMessageInfo> =>
-		this.send(mess, { text: global.util.logger.format(text), quoted: mess });
+		this.send(mess, { text: util.logger.format(text), quoted: mess });
 
-	public downloadMessage = async (mess: IProto, filename: string) => {
+	public throw = async (
+		mess: IProto,
+		error: any,
+		command: string,
+	): Promise<baileys.WAProto.WebMessageInfo> => {
+		await this.send(config.ownerNumber[0] + '@s.whatsapp.net', {
+			text: `Error\nCommand: ${command}\n\n${error}`,
+		});
+		return client.reply(mess, config.response.error);
+	};
+
+	downloadMessage = async (mess: IProto, filename: string) => {
 		try {
 			const values = Object.values(this.messageType);
 			const type = Object.keys(mess).find(
@@ -173,7 +184,7 @@ export default class Client {
 				filename,
 			);
 		} catch (e) {
-			throw global.util.logger.format(e);
+			throw util.logger.format(e);
 		}
 	};
 
@@ -214,11 +225,9 @@ export default class Client {
 
 			if (filename) {
 				filename = autoFormat ? `${filename}.${template.ext}` : filename;
-				if (!existsSync(global.config.tempDir)) mkdirSync(global.config.tempDir.split('/')[1]);
+				if (!existsSync(config.tempDir)) mkdirSync(config.tempDir.split('/')[1]);
 				writeFileSync(
-					filename.includes(global.config.tempDir)
-						? filename
-						: `${global.config.tempDir}${filename}`,
+					filename.includes(config.tempDir) ? filename : `${config.tempDir}${filename}`,
 					buffer,
 				);
 				return {
@@ -232,7 +241,7 @@ export default class Client {
 				...template,
 			};
 		} catch (e) {
-			throw global.util.logger.format(e);
+			throw util.logger.format(e);
 		}
 	};
 
@@ -278,7 +287,7 @@ export default class Client {
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
 							proto.type as keyof baileys.WAProto.IMessage
 					  ].text
-					: proto.type === 'templateButtomReplyMessage'
+					: proto.type === 'templateButtonReplyMessage'
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
 							proto.type as keyof baileys.WAProto.IMessage
 					  ].selectedId
@@ -293,12 +302,12 @@ export default class Client {
 			proto.sender.jid = proto.isGroup
 				? mess.key.participant
 					? mess.key.participant
-					: global.client.socket.user.id
+					: client.socket.user.id
 				: mess.key.remoteJid;
 			proto.sender.name = mess.pushName;
 			proto.client = {} as typeof proto.client;
-			proto.client.name = global.client.socket.user.name;
-			proto.client.jid = global.client.socket.user.id.split(':')[0] + '@s.whatsapp.net';
+			proto.client.name = client.socket.user.name;
+			proto.client.jid = client.socket.user.id.split(':')[0] + '@s.whatsapp.net';
 			proto.mentionedJid =
 				proto.data.includes('contextInfo') && proto.data.includes('mentionedJid')
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
@@ -317,7 +326,7 @@ export default class Client {
 								fromMe:
 									(mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
 										proto.type as keyof baileys.WAProto.IMessage
-									].contextInfo.participant === global.client.socket.user.id,
+									].contextInfo.participant === client.socket.user.id,
 								id: (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
 									proto.type as keyof baileys.WAProto.IMessage
 								].contextInfo.stanzaId,
@@ -332,10 +341,8 @@ export default class Client {
 					: undefined;
 			proto.isOwner =
 				mess.key.fromMe ??
-				(global.config.ownerNumber.includes(proto.sender.jid!.split('@')[0]) as boolean);
-			proto.groupData = proto.isGroup
-				? await global.client.socket.groupMetadata(proto.from!)
-				: undefined;
+				(config.ownerNumber.includes(proto.sender.jid!.split('@')[0]) as boolean);
+			proto.groupData = proto.isGroup ? await client.socket.groupMetadata(proto.from!) : undefined;
 			if (proto.groupData) {
 				proto.sender = {
 					...proto.sender,
@@ -343,14 +350,17 @@ export default class Client {
 				};
 				proto.client = {
 					...proto.client,
-					...proto.groupData.participants.find((a) => a.id === proto.client.jid),
+					...(proto.groupData.participants.find((a) => a.id === proto.client.jid) as {
+						id: string;
+						admin: boolean | null;
+					}),
 				};
 			}
 			proto.downloadMsg = async (filename) =>
-				await global.client.downloadMessage(proto.message! as IProto, filename!);
+				await client.downloadMessage(proto.message! as IProto, filename!);
 			proto.deleteMsg = (forAll = true) => {
 				if (forAll) {
-					return global.client.socket.sendMessage(proto.from!, {
+					return client.socket.sendMessage(proto.from!, {
 						delete: {
 							fromMe: true,
 							id: mess.key.id,
@@ -358,7 +368,7 @@ export default class Client {
 						},
 					});
 				} else {
-					return global.client.socket.sendMessage(proto.from!, {
+					return client.socket.sendMessage(proto.from!, {
 						delete: {
 							fromMe: true,
 							id: mess.key.id,
@@ -368,8 +378,8 @@ export default class Client {
 				}
 			};
 			proto.quotedMsg = proto.quotedMsg
-				? ((global.client.chats as Record<string, object>)[mess.key.remoteJid!] &&
-						(global.client.chats as Record<string, { messages: Record<string, object> }>)[
+				? ((client.chats as Record<string, object>)[mess.key.remoteJid!] &&
+						(client.chats as Record<string, { messages: Record<string, object> }>)[
 							mess.key.remoteJid!
 						].messages[(proto.quotedMsg as IQuoted).key.id!]) ||
 				  (await fallback(proto.quotedMsg! as IQuoted))
@@ -384,8 +394,8 @@ export default class Client {
 		try {
 			const bufferData = await this.getBuffer(content);
 			const Buffer = bufferData.buffer;
-			const input = global.util.autoPath(bufferData.ext);
-			const output = global.util.autoPath('webp');
+			const input = util.autoPath(bufferData.ext);
+			const output = util.autoPath('webp');
 			if (!existsSync('./tmp')) mkdirSync('tmp');
 			writeFileSync(input, Buffer);
 
@@ -407,7 +417,7 @@ export default class Client {
 			return Ffmpeg(input)
 				.on('error', (e) => {
 					unlinkSync(input);
-					throw global.util.logger.format(new Error(e));
+					throw util.logger.format(new Error(e));
 				})
 				.addInputOptions([
 					'-vcodec',
@@ -420,7 +430,7 @@ export default class Client {
 				.on('end', () => {
 					if (exifPath) {
 						return exec(`webpmux -set exif=${exifPath} ${output} ${output}`, (e) => {
-							if (e) throw global.util.logger.format(e);
+							if (e) throw util.logger.format(e);
 							const saver = readFileSync(output);
 							unlinkSync(input);
 							unlinkSync(output);
@@ -434,7 +444,7 @@ export default class Client {
 					}
 				});
 		} catch (e) {
-			throw global.util.logger.format(e);
+			throw util.logger.format(e);
 		}
 	};
 }

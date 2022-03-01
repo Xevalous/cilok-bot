@@ -6,15 +6,15 @@ import makeWASocket, { DisconnectReason, useSingleFileAuthState } from '@adiwajs
 
 export default async function CreateConnection() {
 	try {
-		global.database.saveOn = global.database?.saveOn ?? 0;
+		database.saveOn = database?.saveOn ?? 0;
 
-		global.util.logger.info('Connecting to whatsapp server...');
+		util.logger.info('Connecting to whatsapp server...');
 		const { state, saveState } = useSingleFileAuthState('./src/database/session.json');
 		const socket = makeWASocket({
 			auth: state,
 			printQRInTerminal: true,
 			browser: ['cilok-v2-md-debug-ts', 'Desktop', '2.0.1'],
-			version: await global.util.waVersion(),
+			version: await util.waVersion(),
 			logger: pino({
 				level: 'info',
 			}),
@@ -23,7 +23,7 @@ export default async function CreateConnection() {
 		socket.ev.on('connection.update', (condition) => {
 			switch (condition.connection) {
 				case 'open':
-					global.util.logger.info('Connected to whatsapp server');
+					util.logger.info('Connected to whatsapp server');
 					break;
 				case 'close':
 					const statusCode = (condition.lastDisconnect?.error as Boom).output.statusCode;
@@ -39,23 +39,21 @@ export default async function CreateConnection() {
 		socket.ev.on('creds.update', () => {
 			saveState();
 			const triggerSave = 10;
-			if ((global.database.saveOn as number) === triggerSave) {
-				global.database.saveOn = 0;
-				global.util.logger.database('Saving database...');
-				for (const a of Object.keys(global.database)) {
-					writeFileSync(`./src/database/${a}.json`, JSON.stringify(global.database[a]));
+			if ((database.saveOn as number) === triggerSave) {
+				database.saveOn = 0;
+				util.logger.database('Saving database...');
+				for (const a of Object.keys(database)) {
+					writeFileSync(`./src/database/${a}.json`, JSON.stringify(database[a]));
 				}
-				return global.util.logger.database('Saving database complete');
+				return util.logger.database('Saving database complete');
 			} else {
-				global.database.saveOn++;
-				return global.util.logger.info(
-					`Saving database progress > ${global.database.saveOn} / ${triggerSave}`,
-				);
+				database.saveOn++;
+				return util.logger.info(`Saving database progress > ${database.saveOn} / ${triggerSave}`);
 			}
 		});
 
 		return new Client(socket);
 	} catch (e) {
-		throw global.util.logger.format(e);
+		throw util.logger.format(e);
 	}
 }
