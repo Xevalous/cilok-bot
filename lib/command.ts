@@ -96,10 +96,10 @@ export default class Command {
 		if ((event.event as ICommand)?.query && event.query.length === 0)
 			CONFIG = [(event.event as ICommand).query!, 'query'];
 
-		if ((event.event as ICommand)?.group && !mess.isGroup)
+		if ((event.event as ICommand)?.group && !mess.validator.isGroup)
 			CONFIG = [(event.event as ICommand).group!, 'group'];
 
-		if ((event.event as ICommand)?.owner && !mess.isOwner)
+		if ((event.event as ICommand)?.owner && !mess.validator.isOwner)
 			CONFIG = [(event.event as ICommand).owner!, 'owner'];
 
 		if (typeof CONFIG === 'object' && CONFIG.length > 0) {
@@ -108,7 +108,6 @@ export default class Command {
 
 		if ((event.event as ICommand)?.wait)
 			this.action(mess, (event.event as ICommand).wait as boolean | string, 'wait');
-
 		return 200;
 	};
 

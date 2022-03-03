@@ -4,7 +4,7 @@ import Command from './command';
 import CreateConnection from './connection';
 import { format } from 'util';
 import { readFileSync, readdirSync, existsSync, mkdirSync } from 'fs';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios';
 
 export async function delay(ms: number): Promise<void> {
 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,18 +39,21 @@ export function autoPath(format: string, filename?: string, useTemp = true): str
 	}${format && !format.includes('.') ? '.' + format : format}`;
 }
 
+export function headers(additional?: AxiosRequestHeaders): AxiosRequestHeaders {
+	return {
+		'user-agent':
+			'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 OPR/81.0.4196.61',
+		'sec-ch-ua': '"Opera GX";v="81", " Not;A Brand";v="99", "Chromium";v="95"',
+		...additional,
+	};
+}
+
 export async function waVersion(): Promise<[number, number, number]> {
 	const defaultVersion: [number, number, number] = [2, 2022, 12];
 	try {
 		const request: AxiosResponse = await axios.get(
 			'https://web.whatsapp.com/check-update?version=1&platform=web',
-			{
-				headers: {
-					'user-agent':
-						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 OPR/81.0.4196.61',
-					'sec-a-ua': '"Opera GX";v="81", " Not;A Brand";v="99", "Chromium";v="95"',
-				},
-			},
+			headers(),
 		);
 		if (request.status === 200 && request.data?.currentVersion) {
 			return [

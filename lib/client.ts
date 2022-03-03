@@ -249,140 +249,140 @@ export default class Client {
 		async function fallback(mess: baileys.proto.IWebMessageInfo) {
 			const proto: IProto = {} as IProto;
 
-			proto.sender = {} as typeof proto.sender;
-			proto.realType = Object.keys(mess.message!)[0];
+			proto.type = [
+				Object.keys(mess.message!)[0],
+				Object.keys(mess.message!).find((a) => {
+					const b = a.toString().toLowerCase();
+					return !b.includes('senderkey') && !b.includes('context');
+				}),
+			]; // [0] for realType else [1]
 			proto.message =
-				proto.realType === 'ephemeralMessage'
+				proto.type[1] === 'ephemeralMessage'
 					? mess.message?.ephemeralMessage?.message
 					: mess.message;
-			proto.type = Object.keys(mess.message!).find((a) => {
-				const b = a.toString().toLowerCase();
-				return !b.includes('senderkey') && !b.includes('context');
-			});
 			proto.data =
-				typeof mess.message![proto.type as keyof baileys.WAProto.IMessage] === 'object'
-					? Object.keys(mess.message![proto.type! as keyof baileys.WAProto.IMessage]!).includes(
+				typeof mess.message![proto.type[1] as keyof baileys.WAProto.IMessage] === 'object'
+					? Object.keys(mess.message![proto.type[1] as keyof baileys.WAProto.IMessage]!).includes(
 							'contextInfo',
 					  )
-						? Object.keys(mess.message![proto.type! as keyof baileys.WAProto.IMessage]!).concat(
+						? Object.keys(mess.message![proto.type[1] as keyof baileys.WAProto.IMessage]!).concat(
 								Object.keys(
 									(
-										mess.message![proto.type! as keyof baileys.WAProto.IMessage]! as Record<
+										mess.message![proto.type[1] as keyof baileys.WAProto.IMessage]! as Record<
 											string,
 											any
 										>
 									).contextInfo,
 								),
 						  )
-						: Object.keys(mess.message![proto.type! as keyof baileys.WAProto.IMessage]!)
+						: Object.keys(mess.message![proto.type[1] as keyof baileys.WAProto.IMessage]!)
 					: Object.keys(mess.message!);
 			proto.string =
-				proto.type === 'conversation'
+				proto.type[1] === 'conversation'
 					? mess.message?.conversation
 					: proto.data.includes('caption')
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-							proto.type as keyof baileys.WAProto.IMessage
+							proto.type[1] as keyof baileys.WAProto.IMessage
 					  ]!.caption
-					: proto.type === 'extendedTextMessage'
+					: proto.type[1] === 'extendedTextMessage'
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-							proto.type as keyof baileys.WAProto.IMessage
+							proto.type[1] as keyof baileys.WAProto.IMessage
 					  ].text
-					: proto.type === 'templateButtonReplyMessage'
+					: proto.type[1] === 'templateButtonReplyMessage'
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-							proto.type as keyof baileys.WAProto.IMessage
+							proto.type[1] as keyof baileys.WAProto.IMessage
 					  ].selectedId
 					: proto.data[0] === 'listResponseMessage'
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-							proto.type as keyof baileys.WAProto.IMessage
+							proto.type[1] as keyof baileys.WAProto.IMessage
 					  ].singleSelectReply.selectedRowId
 					: '';
-			proto.body = mess.message![proto.type as keyof baileys.WAProto.IMessage];
+			proto.body = mess.message![proto.type[1] as keyof baileys.WAProto.IMessage];
 			proto.from = mess.key.remoteJid;
-			proto.isGroup = proto.from!.includes('@g.us');
-			proto.sender.jid = proto.isGroup
-				? mess.key.participant
+			proto.fromMe = mess.key.fromMe as boolean;
+			proto.validator = {
+				message: {
+					isText: proto.type[1] === 'conversation' || proto.type[1] === 'extendedTextMessage',
+					isMedia: false,
+				},
+				isOwner:
+					mess.key.fromMe ??
+					(config.ownerNumber.includes(proto.sender.jid!.split('@')[0]) as boolean),
+				isGroup: proto.from!.includes('@g.us'),
+			};
+			proto.validator.message.isMedia = !proto.validator.message.isText;
+			proto.sender = {
+				name: mess.pushName,
+				jid: proto.validator.isGroup
 					? mess.key.participant
-					: client.socket.user.id
-				: mess.key.remoteJid;
-			proto.sender.name = mess.pushName;
-			proto.client = {} as typeof proto.client;
-			proto.client.name = client.socket.user.name;
-			proto.client.jid = client.socket.user.id.split(':')[0] + '@s.whatsapp.net';
+						? mess.key.participant
+						: client.socket.user.id
+					: mess.key.remoteJid,
+			};
+			proto.client = {
+				name: client.socket.user.name,
+				jid: client.socket.user.id.split(':')[0] + '@s.whatsapp.net',
+			};
 			proto.mentionedJid =
 				proto.data.includes('contextInfo') && proto.data.includes('mentionedJid')
 					? (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-							proto.type as keyof baileys.WAProto.IMessage
+							proto.type[1] as keyof baileys.WAProto.IMessage
 					  ].contextInfo.mentionedJid
 					: undefined;
-			proto.isText = proto.type === 'conversation' || proto.type === 'extendedTextMessage';
-			proto.isMedia = !proto.isText;
-			proto.id = mess.key.id;
-			proto.fromMe = mess.key.fromMe as boolean;
-			proto.quotedMsg =
+
+			proto.quotedMess =
 				proto.data.includes('contextInfo') && proto.data.includes('quotedMessage')
 					? {
 							key: {
 								remoteJid: proto.from,
 								fromMe:
 									(mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-										proto.type as keyof baileys.WAProto.IMessage
+										proto.type[1] as keyof baileys.WAProto.IMessage
 									].contextInfo.participant === client.socket.user.id,
 								id: (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-									proto.type as keyof baileys.WAProto.IMessage
+									proto.type[1] as keyof baileys.WAProto.IMessage
 								].contextInfo.stanzaId,
 								participant: (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-									proto.type as keyof baileys.WAProto.IMessage
+									proto.type[1] as keyof baileys.WAProto.IMessage
 								].contextInfo.participant,
 							},
 							message: (mess.message as Record<keyof baileys.WAProto.IMessage, any>)[
-								proto.type as keyof baileys.WAProto.IMessage
+								proto.type[1] as keyof baileys.WAProto.IMessage
 							].contextInfo.quotedMessage,
 					  }
 					: undefined;
-			proto.isOwner =
-				mess.key.fromMe ??
-				(config.ownerNumber.includes(proto.sender.jid!.split('@')[0]) as boolean);
-			proto.groupData = proto.isGroup ? await client.socket.groupMetadata(proto.from!) : undefined;
-			if (proto.groupData) {
-				proto.sender = {
-					...proto.sender,
-					...proto.groupData.participants.find((a) => a.id === proto.sender.jid),
-				};
-				proto.client = {
-					...proto.client,
-					...(proto.groupData.participants.find((a) => a.id === proto.client.jid) as {
-						id: string;
-						admin: boolean | null;
-					}),
-				};
-			}
-			proto.downloadMsg = async (filename) =>
-				await client.downloadMessage(proto.message! as IProto, filename!);
-			proto.deleteMsg = (forAll = true) => {
-				if (forAll) {
-					return client.socket.sendMessage(proto.from!, {
-						delete: {
-							fromMe: true,
-							id: mess.key.id,
-							participant: mess.key.remoteJid,
-						},
-					});
-				} else {
-					return client.socket.sendMessage(proto.from!, {
-						delete: {
-							fromMe: true,
-							id: mess.key.id,
-							participant: mess.key.remoteJid,
-						},
-					});
-				}
+			proto.groupData = proto.validator.isGroup
+				? await client.socket.groupMetadata(proto.from!)
+				: undefined;
+			proto.messFunctions = {
+				downloadMess: async (filename) =>
+					await client.downloadMessage(proto.message! as IProto, filename!),
+				deleteMess: (forAll = true) => {
+					if (forAll) {
+						return client.socket.sendMessage(proto.from!, {
+							delete: {
+								fromMe: true,
+								id: mess.key.id,
+								participant: mess.key.remoteJid,
+							},
+						});
+					} else {
+						return client.socket.sendMessage(proto.from!, {
+							delete: {
+								fromMe: true,
+								id: mess.key.id,
+								participant: mess.key.remoteJid,
+							},
+						});
+					}
+				},
 			};
-			proto.quotedMsg = proto.quotedMsg
+			proto.quotedMess = proto.quotedMess
 				? ((client.chats as Record<string, object>)[mess.key.remoteJid!] &&
 						(client.chats as Record<string, { messages: Record<string, object> }>)[
 							mess.key.remoteJid!
-						].messages[(proto.quotedMsg as IQuoted).key.id!]) ||
-				  (await fallback(proto.quotedMsg! as IQuoted))
+						].messages[(proto.quotedMess as IQuoted).key.id!]) ||
+				  (await fallback(proto.quotedMess! as IQuoted))
 				: undefined;
 
 			return { ...mess, ...proto };

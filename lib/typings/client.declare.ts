@@ -9,7 +9,9 @@ import {
 export declare type IContent =
 	| (AnyMessageContent & MiscMessageGenerationOptions)
 	| { image: string }
-	| { filename: string };
+	| { filename: string }
+	| { video: string }
+	| { image: string };
 
 export declare type IBuffer =
 	| string
@@ -44,25 +46,29 @@ export declare interface IProto extends proto.IWebMessageInfo {
 	client: {
 		name: string | undefined;
 		jid: string;
-	} & { id: string; admin: boolean | null };
-	isGroup: boolean;
-	isOwner: boolean;
-	isText: boolean;
-	isMedia: boolean;
-	type: string | undefined;
-	realType: string;
+	};
+	validator: {
+		message: {
+			isText: boolean;
+			isMedia: boolean;
+		};
+		isOwner: boolean;
+		isGroup: boolean;
+	};
+	messFunctions: {
+		downloadMess: (filename?: string) => ReturnType<typeof client.downloadMessage>;
+		deleteMess: (forAll?: boolean) => Promise<proto.WebMessageInfo>;
+	};
+	type: [string, string | undefined];
 	string: string;
 	from: string | null | undefined;
 	fromMe: boolean;
-	id: string | null | undefined;
 	mentionedJid: string[] | undefined;
 	message: proto.IMessage | null | undefined;
-	quotedMsg: object | IQuoted | undefined;
+	quotedMess: object | IQuoted | undefined;
 	body: proto.IMessage[keyof proto.IMessage];
 	data: string[];
 	groupData: GroupMetadata | undefined;
-	downloadMsg: (filename?: string) => ReturnType<typeof client.downloadMessage>;
-	deleteMsg: (forAll?: boolean) => Promise<proto.WebMessageInfo>;
 }
 
 export declare interface IQuoted {

@@ -10,7 +10,7 @@ client.socket.ev.on('messages.upsert', async (upsert) => {
 		return;
 	}
 
-	if (mess.isGroup) {
+	if (mess.validator.isGroup) {
 		if (!database.group) database.group = {};
 		if (!database.group[mess.from!]) {
 			database.group[mess.from!] = { subject: mess.groupData?.subject };
@@ -20,7 +20,7 @@ client.socket.ev.on('messages.upsert', async (upsert) => {
 	if (!client.chats[mess.from!]) {
 		client.chats[mess.from!] = { messages: {} };
 	}
-	client.chats[mess.from!].messages[mess.id!] = mess;
+	client.chats[mess.from!].messages[mess.key.id!] = mess;
 	database.chats = client.chats;
 	command.emit(mess);
 });
