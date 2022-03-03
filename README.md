@@ -32,5 +32,5 @@ start ./src/install.bat
 pnpm start
 ```
 - scan the QR to make a session, session, chats will be stored in ```./src/database/```
-- there will be some logs spamming because the logger level is set to ```info``` you can change the value to ```silent``` in [here](https://github.com/VEXG/cilok-v2-md/blob/f93ce0ec32b83ccc1f99f552346632808a6a33ae/lib/connection.ts#L19) to hide the spamming logs. [Learn more](https://github.com/pinojs/pino/blob/master/docs/api.md#loggerlevels-object)
-- Done! you are successfully running the BOT. To make sure type ```>>``` in your chat to make sure its running perfectly ( make sure you're the owner of the bot )
+- there will be some logs spamming because the logger level is set to ```info```, you can change the value to ```silent``` in [here](https://github.com/VEXG/cilok-v2-md/blob/f93ce0ec32b83ccc1f99f552346632808a6a33ae/lib/connection.ts#L19) to hide the spamming logs. [Learn more](https://github.com/pinojs/pino/blob/master/docs/api.md#loggerlevels-object)
+- Done! you are successfully running the BOT. Type ```>>``` in your chat to make sure its running perfectly ( make sure you're the owner of the bot )
