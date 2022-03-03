@@ -11,7 +11,7 @@ https://vexg.github.io/cilok-v2-md/
 
 ## Installation
 ### Note
-The installation use [pnpm](https://pnpm.io/) to install dependencies. [Learn more](https://pnpm.io/motivation)
+This source code using [pnpm](https://pnpm.io/) dependencies manager. [Learn more](https://pnpm.io/motivation)
 ### For Linux
 ```
 bash ./src/install.sh
