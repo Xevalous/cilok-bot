@@ -4,7 +4,7 @@ import Command from './command';
 import CreateConnection from './connection';
 import { format } from 'util';
 import { readFileSync, readdirSync, existsSync, mkdirSync } from 'fs';
-import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig, AxiosRequestHeaders, AxiosResponse } from 'axios';
 
 export async function delay(ms: number): Promise<void> {
 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,11 +39,14 @@ export function autoPath(format: string, filename?: string, useTemp = true): str
 	}${format && !format.includes('.') ? '.' + format : format}`;
 }
 
-export function headers(additional?: AxiosRequestHeaders): AxiosRequestHeaders {
+export function headers(additional?: AxiosRequestConfig, additionalHeaders?: AxiosRequestHeaders) {
 	return {
-		'user-agent':
-			'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 OPR/81.0.4196.61',
-		'sec-ch-ua': '"Opera GX";v="81", " Not;A Brand";v="99", "Chromium";v="95"',
+		headers: {
+			'user-agent':
+				'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/99.0.1150.30',
+			'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="99", "Microsoft Edge";v="99"',
+			...additionalHeaders,
+		},
 		...additional,
 	};
 }

@@ -29,9 +29,10 @@ export default class Command {
 			),
 			tag,
 			help: 'Tidak ada informasi bantuan!',
+			wait: true,
 			prefix: true,
-			callback,
 			enable: true,
+			callback,
 			...options,
 		};
 
@@ -123,8 +124,8 @@ export default class Command {
 						.sort((a, b) => b.toString().length - a.toString().length)[0]
 				: /^()/i;
 			if (!prefix) continue;
-			const noPrefix = key.replace(prefix, '');
-			const noPrefix_lower = noPrefix.toLowerCase();
+			const noPrefix = key.replace(prefix, ''),
+				noPrefix_lower = noPrefix.toLowerCase();
 			const b = a.commandEXP
 				.filter((a) => (a as RegExp).test(noPrefix_lower))
 				.sort((a, b) => b.toString().length - a.toString().length)[0];
@@ -143,10 +144,7 @@ export default class Command {
 		content.event = command.sort((a, b) => b.length - a.length)[0];
 		content.text = key;
 		content.query = content.event.noPrefix.replace(content.event.matched, '').trim();
-		content.command = content.event.noPrefix
-			.replace(content.query.toLowerCase(), '')
-			.trim()
-			.toLowerCase();
+		content.command = content.event.noPrefix.replace(content.query, '').trim().toLowerCase();
 		content.prefix = key.toLowerCase().split(content.command)[0];
 		content.modify = (property: ICommand) => {
 			this.commandList[(content.event as ICommand).index!] = {

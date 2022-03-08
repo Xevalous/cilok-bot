@@ -16,6 +16,7 @@ command.on(
 	},
 	{
 		owner: '--noresp',
+		wait: false,
 		prefix: false,
 	},
 );
@@ -35,6 +36,7 @@ command.on(
 	},
 	{
 		owner: '--noresp',
+		wait: false,
 		prefix: false,
 	},
 );

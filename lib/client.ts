@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Ffmpeg from 'fluent-ffmpeg';
+import { Agent } from 'https';
 import { exec } from 'child_process';
 import { Readable } from 'form-data';
 import { fromBuffer } from 'file-type';
@@ -196,8 +197,11 @@ export default class Client {
 			} else if (/^data:.?\/.?;base64,/i.test(content as string)) {
 				buffer = Buffer.from((content as string).split(',')[1], 'base64');
 			} else if (/^https?:\/\//.test(content as string)) {
+				let httpsAgent = undefined;
 				if (/y2mate/gi.test(content as string)) {
-					process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+					httpsAgent = new Agent({
+						rejectUnauthorized: false,
+					});
 				}
 				buffer = (
 					await axios.get(content as string, {
@@ -207,6 +211,7 @@ export default class Client {
 								'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 OPR/81.0.4196.61',
 							'sec-ch-ua': '"Opera GX";v="81", " Not;A Brand";v="99", "Chromium";v="95"',
 						},
+						httpsAgent,
 					})
 				).data;
 			} else if (existsSync(content as string)) {
@@ -392,10 +397,10 @@ export default class Client {
 
 	private prepareSticker = async (content: IBuffer, exifPath: string) => {
 		try {
-			const bufferData = await this.getBuffer(content);
-			const Buffer = bufferData.buffer;
-			const input = util.autoPath(bufferData.ext);
-			const output = util.autoPath('webp');
+			const bufferData = await this.getBuffer(content),
+				Buffer = bufferData.buffer;
+			const input = util.autoPath(bufferData.ext),
+				output = util.autoPath('webp');
 			if (!existsSync('./tmp')) mkdirSync('tmp');
 			writeFileSync(input, Buffer);
 
