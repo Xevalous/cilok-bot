@@ -25,10 +25,10 @@ export default async function webp2mp4(file: string): Promise<{ status: number; 
 			file: filename,
 			convert: 'Convert WebP to MP4!',
 		});
-		const requestData = await request(form, filename);
-		$ = load(requestData.data);
+		const response = await request(form, filename);
+		$ = load(response.data);
 		return {
-			status: requestData.status,
+			status: response.status,
 			author: 'VEXG',
 			result: `https:${$('div#output > p.outfile > video > source').attr('src')}`,
 		};
