@@ -1,14 +1,16 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@adiwajshing/baileys': ^4.0.0
+  '@adiwajshing/baileys': ^4.0.1
   '@adiwajshing/keyed-db': ^0.2.4
   '@hapi/boom': ^9.1.4
   '@types/fluent-ffmpeg': ^2.1.20
   '@types/node-cron': ^3.0.1
   axios: ^0.26.0
   chalk: 4.1.2
-  cheerio: ^1.0.0-rc.10
+  cheerio: 1.0.0-rc.10
+  dayjs: ^1.10.8
+  domhandler: ^4.3.0
   dotenv: ^16.0.0
   file-type: 16.5.3
   fluent-ffmpeg: ^2.1.2
@@ -16,18 +18,20 @@ specifiers:
   fs: ^0.0.1-security
   jimp: ^0.16.1
   node-cron: ^3.0.0
-  pino: ^7.6.5
+  pino: ^7.8.0
   qrcode-terminal: ^0.12.0
   sharp: 0.29.3
   util: ^0.12.4
 
 dependencies:
-  '@adiwajshing/baileys': 4.0.0_33a3975faaac041ede827e7b15b44a33
+  '@adiwajshing/baileys': 4.0.1_33a3975faaac041ede827e7b15b44a33
   '@adiwajshing/keyed-db': 0.2.4
   '@hapi/boom': 9.1.4
   axios: 0.26.0
   chalk: 4.1.2
   cheerio: 1.0.0-rc.10
+  dayjs: 1.10.8
+  domhandler: 4.3.0
   dotenv: 16.0.0
   file-type: 16.5.3
   fluent-ffmpeg: 2.1.2
@@ -35,7 +39,7 @@ dependencies:
   fs: 0.0.1-security
   jimp: 0.16.1
   node-cron: 3.0.0
-  pino: 7.6.5
+  pino: 7.8.0
   qrcode-terminal: 0.12.0
   sharp: 0.29.3
   util: 0.12.4
@@ -46,8 +50,8 @@ devDependencies:
 
 packages:
 
-  /@adiwajshing/baileys/4.0.0_33a3975faaac041ede827e7b15b44a33:
-    resolution: {integrity: sha512-5BzlC6d/h4Q+mXz1sXvzMW4yRWxN56l4VaqGzWn82w3DIRPXI78Z8mprDo03J2wSb/BCXCQw8HGD80mit+O/Gw==}
+  /@adiwajshing/baileys/4.0.1_33a3975faaac041ede827e7b15b44a33:
+    resolution: {integrity: sha512-kofB9XUgv5zDYa7v6ZR+4nrddAL/M7ZdjbYfPd6ijVAm0WC6uowT7jLIw7FGfhZ142qJ3i67wgLrAsjVzrvsnw==}
     peerDependencies:
       '@adiwajshing/keyed-db': ^0.2.4
       jimp: ^0.16.1
@@ -60,9 +64,9 @@ packages:
       curve25519-js: 0.0.4
       jimp: 0.16.1
       libsignal: github.com/adiwajshing/libsignal-node/4ffc1f3d6147ffdec88f62e70f41e7de2e08cd42
-      music-metadata: 7.11.8
+      music-metadata: 7.12.2
       node-cache: 5.1.2
-      pino: 7.6.5
+      pino: 7.8.0
       protobufjs: 6.11.2
       qrcode-terminal: 0.12.0
       sharp: 0.29.3
@@ -520,7 +524,7 @@ packages:
   /@types/fluent-ffmpeg/2.1.20:
     resolution: {integrity: sha512-B+OvhCdJ3LgEq2PhvWNOiB/EfwnXLElfMCgc4Z1K5zXgSfo9I6uGKwR/lqmNPFQuebNnes7re3gqkV77SyypLg==}
     dependencies:
-      '@types/node': 17.0.17
+      '@types/node': 17.0.21
     dev: true
 
   /@types/long/4.0.1:
@@ -535,8 +539,8 @@ packages:
     resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
     dev: false
 
-  /@types/node/17.0.17:
-    resolution: {integrity: sha512-e8PUNQy1HgJGV3iU/Bp2+D/DXh3PYeyli8LgIwsQcs1Ar1LoaWHSIT6Rw+H2rNJmiq6SNWiDytfx8+gYj7wDHw==}
+  /@types/node/17.0.21:
+    resolution: {integrity: sha512-DBZCJbhII3r90XbQxI8Y9IjjiiOGlZ0Hr32omXIZvwwZ7p4DMMXGrKXVyPfuoBOri9XNtL0UK69jYIBIsRX3QQ==}
 
   /ansi-regex/2.1.1:
     resolution: {integrity: sha1-w7M6te42DYbg5ijwRorn7yfWVN8=}
@@ -586,7 +590,7 @@ packages:
   /axios/0.24.0:
     resolution: {integrity: sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==}
     dependencies:
-      follow-redirects: 1.14.8
+      follow-redirects: 1.14.9
     transitivePeerDependencies:
       - debug
     dev: false
@@ -594,7 +598,7 @@ packages:
   /axios/0.26.0:
     resolution: {integrity: sha512-lKoGLMYtHvFrPVt3r+RBMp9nh34N0M8zEfCWqdWZx6phynIEhQqAdydpyBAAG211zlhX9Rgu08cOamy6XjE5Og==}
     dependencies:
-      follow-redirects: 1.14.8
+      follow-redirects: 1.14.9
     transitivePeerDependencies:
       - debug
     dev: false
@@ -748,6 +752,10 @@ packages:
     resolution: {integrity: sha512-axn2UMEnkhyDUPWOwVKBMVIzSQy2ejH2xRGy1wq81dqRwApXfIzfbE3hIX0ZRFBIihf/KDqK158DLwESu4AK1w==}
     dev: false
 
+  /dayjs/1.10.8:
+    resolution: {integrity: sha512-wbNwDfBHHur9UOzNUjeKUOJ0fCb0a52Wx0xInmQ7Y8FstyajiV1NmK1e00cxsr9YrE9r7yAChE0VvpuY5Rnlow==}
+    dev: false
+
   /debug/4.3.3:
     resolution: {integrity: sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==}
     engines: {node: '>=6.0'}
@@ -864,7 +872,7 @@ packages:
       get-intrinsic: 1.1.1
       get-symbol-description: 1.0.0
       has: 1.0.3
-      has-symbols: 1.0.2
+      has-symbols: 1.0.3
       internal-slot: 1.0.3
       is-callable: 1.2.4
       is-negative-zero: 2.0.2
@@ -898,8 +906,8 @@ packages:
     engines: {node: '>=6'}
     dev: false
 
-  /fast-redact/3.1.0:
-    resolution: {integrity: sha512-dir8LOnvialLxiXDPESMDHGp82CHi6ZEYTVkcvdn5d7psdv9ZkkButXrOeXST4aqreIRR+N7CYlsrwFuorurVg==}
+  /fast-redact/3.1.1:
+    resolution: {integrity: sha512-odVmjC8x8jNeMZ3C+rPMESzXVSEU8tSWSHv9HFxP2mm89G/1WwqhrerJDQm9Zus8X6aoRgQDThKqptdNA6bt+A==}
     engines: {node: '>=6'}
     dev: false
 
@@ -909,7 +917,7 @@ packages:
     dependencies:
       readable-web-to-node-stream: 3.0.2
       strtok3: 6.3.0
-      token-types: 4.1.1
+      token-types: 4.2.0
     dev: false
 
   /file-type/9.0.0:
@@ -925,8 +933,8 @@ packages:
       which: 1.3.1
     dev: false
 
-  /follow-redirects/1.14.8:
-    resolution: {integrity: sha512-1x0S9UVJHsQprFcEC/qnNzBLcIxsjAV905f/UkQxbclCsoTWlacCNOpQa/anodLl2uaEKFhfWOvM2Qg77+15zA==}
+  /follow-redirects/1.14.9:
+    resolution: {integrity: sha512-MQDfihBQYMcyy5dhRDJUHcw7lb2Pv/TuE6xP1vyraLukNDHKbDxDNaOE3NbCAdKQApno+GPRyo1YAp89yCjK4w==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -978,7 +986,7 @@ packages:
     dependencies:
       function-bind: 1.1.1
       has: 1.0.3
-      has-symbols: 1.0.2
+      has-symbols: 1.0.3
     dev: false
 
   /get-symbol-description/1.0.0:
@@ -1016,8 +1024,8 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /has-symbols/1.0.2:
-    resolution: {integrity: sha512-chXa79rL/UC2KlX17jo3vRGz0azaWEx5tGqZg5pO3NUyEJVB17dMruQlzCCOfUvElghKcm5194+BCRvi2Rv/Gw==}
+  /has-symbols/1.0.3:
+    resolution: {integrity: sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==}
     engines: {node: '>= 0.4'}
     dev: false
 
@@ -1025,7 +1033,7 @@ packages:
     resolution: {integrity: sha512-kFjcSNhnlGV1kyoGk7OXKSawH5JOb/LzUc5w9B02hOTO0dfFRjbHQKvg1d6cf3HbeUmtU9VbbV3qzZ2Teh97WQ==}
     engines: {node: '>= 0.4'}
     dependencies:
-      has-symbols: 1.0.2
+      has-symbols: 1.0.3
     dev: false
 
   /has-unicode/2.0.1:
@@ -1165,7 +1173,7 @@ packages:
     resolution: {integrity: sha512-C/CPBqKWnvdcxqIARxyOh4v1UUEOCHpgDa0WYgpKDFMszcrPcffg5uhwSgPCLD2WWxmq6isisz87tzT01tuGhg==}
     engines: {node: '>= 0.4'}
     dependencies:
-      has-symbols: 1.0.2
+      has-symbols: 1.0.3
     dev: false
 
   /is-typed-array/1.1.8:
@@ -1294,8 +1302,8 @@ packages:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
     dev: false
 
-  /music-metadata/7.11.8:
-    resolution: {integrity: sha512-KaJzxDlYId05zN029WaKhJYcT5FB0QmTRSGDq5bRfPTBUw4Hl0VvJvaO5C5mm0ATWMREecMANV9YUatLMg+0Mg==}
+  /music-metadata/7.12.2:
+    resolution: {integrity: sha512-KO1L6q30b6HfGlDQk1VAdrZqCKi4Gy7pN7eZOZ0YZQkhF/KCLHxKCjKKli9ao9kIBC/9s+uXHvjW3bDIBWuGew==}
     engines: {node: '>=10'}
     dependencies:
       '@tokenizer/token': 0.3.0
@@ -1304,7 +1312,7 @@ packages:
       file-type: 16.5.3
       media-typer: 1.1.0
       strtok3: 6.3.0
-      token-types: 4.1.1
+      token-types: 4.2.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -1378,7 +1386,7 @@ packages:
     dependencies:
       call-bind: 1.0.2
       define-properties: 1.1.3
-      has-symbols: 1.0.2
+      has-symbols: 1.0.3
       object-keys: 1.1.1
     dev: false
 
@@ -1449,11 +1457,11 @@ packages:
     resolution: {integrity: sha512-cK0pekc1Kjy5w9V2/n+8MkZwusa6EyyxfeQCB799CQRhRt/CqYKiWs5adeu8Shve2ZNffvfC/7J64A2PJo1W/Q==}
     dev: false
 
-  /pino/7.6.5:
-    resolution: {integrity: sha512-38tAwlJ7HevMENHD5FZE+yxSlAH5Wg3FoOjbB3MX2j3/kgpOEkmDHhTVKkecR57qxD5doHo2yi9nac94gqqbiQ==}
+  /pino/7.8.0:
+    resolution: {integrity: sha512-Ynw2HRVapiyj+ZGfUcpms+SRgDKFIy0ztaFUf3X6IHh+vsysMvn+tpV/Ej3gyutPp4n9tgH6ZkkCAelSvP5zmQ==}
     hasBin: true
     dependencies:
-      fast-redact: 3.1.0
+      fast-redact: 3.1.1
       on-exit-leak-free: 0.2.0
       pino-abstract-transport: 0.5.0
       pino-std-serializers: 4.0.0
@@ -1462,7 +1470,7 @@ packages:
       real-require: 0.1.0
       safe-stable-stringify: 2.3.1
       sonic-boom: 2.6.0
-      thread-stream: 0.13.1
+      thread-stream: 0.13.2
     dev: false
 
   /pixelmatch/4.0.2:
@@ -1526,7 +1534,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.1
-      '@types/node': 17.0.17
+      '@types/node': 17.0.21
       long: 4.0.0
     dev: false
 
@@ -1784,8 +1792,8 @@ packages:
       readable-stream: 3.6.0
     dev: false
 
-  /thread-stream/0.13.1:
-    resolution: {integrity: sha512-+KNCqNxOSwYfXLtCIRDKQq29x9jvqnOFjYCPdB38sf4pT3QanPSNc8vRqMj+Q3z4tYIctb5opNZrMK/GwmgsAQ==}
+  /thread-stream/0.13.2:
+    resolution: {integrity: sha512-woZFt0cLFkPdhsa+IGpRo1jiSouaHxMIljzTgt30CMjBWoUYbbcHqnunW5Yv+BXko9H05MVIcxMipI3Jblallw==}
     dependencies:
       real-require: 0.1.0
     dev: false
@@ -1798,8 +1806,8 @@ packages:
     resolution: {integrity: sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==}
     dev: false
 
-  /token-types/4.1.1:
-    resolution: {integrity: sha512-hD+QyuUAyI2spzsI0B7gf/jJ2ggR4RjkAo37j3StuePhApJUwcWDjnHDOFdIWYSwNR28H14hpwm4EI+V1Ted1w==}
+  /token-types/4.2.0:
+    resolution: {integrity: sha512-P0rrp4wUpefLncNamWIef62J0v0kQR/GfDVji9WKY7GDCWy5YbVSrKUTam07iWPZQGy0zWNOfstYTykMmPNR7w==}
     engines: {node: '>=10'}
     dependencies:
       '@tokenizer/token': 0.3.0
@@ -1821,7 +1829,7 @@ packages:
     dependencies:
       function-bind: 1.1.1
       has-bigints: 1.0.1
-      has-symbols: 1.0.2
+      has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
     dev: false
 

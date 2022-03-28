@@ -9,12 +9,19 @@ export default class CommandHandler {
 	constructor() {
 		this.commandList = [];
 		this.tag = {};
+<<<<<<< HEAD
 		this.prefix = config.prefix.map((a) => ((a as String) instanceof RegExp ? a : new RegExp(`^(${util.parseRegex(a)})`, 'i')));
+=======
+		this.prefix = config.prefix.map((a) =>
+			(a as any) instanceof RegExp ? a : new RegExp(`^(${util.parseRegex(a)})`, 'i'),
+		);
+>>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 	}
 
 	public on = (
 		command: (string | RegExp)[],
 		tag: string[],
+<<<<<<< HEAD
 		callback: (mess: Proto, property: ICommandHandler.CommandProperty) => Promise<any> | any,
 		additonal?: ICommandHandler.AdditonalEvent | ICommandHandler.Event,
 	): void => {
@@ -24,14 +31,30 @@ export default class CommandHandler {
 				string: (command as string[]).map((a) => a, toString()),
 				regExp: (command as string[]).map((a) => ((a as any) instanceof RegExp ? a : new RegExp(`^(${util.parseRegex(a)})`, 'i'))),
 			},
+=======
+		callback: (mess: IProto, call: ICommandContent) => Promise<any> | any,
+		options?: object,
+	): void => {
+		const EV: ICommand = {
+			name: command[0].toString(),
+			command: command.map((a) => a, toString()),
+			commandEXP: command.map((a) =>
+				(a as any) instanceof RegExp ? a : new RegExp(`^(${util.parseRegex(a)})`, 'i'),
+			),
+>>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 			tag,
 			help: 'Tidak ada informasi bantuan!',
 			wait: true,
 			prefix: true,
 			enable: true,
+<<<<<<< HEAD
 			index: 0,
 			callback,
 			...additonal,
+=======
+			callback,
+			...options,
+>>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 		};
 
 		for (const a of tag) {
@@ -50,11 +73,19 @@ export default class CommandHandler {
 	public emit = (mess: Proto): void => {
 		const ev = this.getCommand(mess.string);
 		try {
+<<<<<<< HEAD
 			if (!('event' in ev)) return;
 			const access = this.getAccess(mess, ev);
 			if (access === 200)
 				ev.event.callback(mess, {
 					...ev,
+=======
+			if (!EV.event) return;
+			const access = this.getAccess(mess, EV);
+			if (access === 200) {
+				(EV.event as ICommand).callback(mess, {
+					...EV,
+>>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 				});
 		} catch (e) {
 			throw util.logger.format(e);
@@ -65,6 +96,7 @@ export default class CommandHandler {
 		mess: Proto,
 		event: string | string[] | boolean,
 		responseKey: string,
+<<<<<<< HEAD
 		additonal?: {
 			prefix?: string;
 			command?: string;
@@ -75,10 +107,22 @@ export default class CommandHandler {
 				? config.response[responseKey as keyof typeof config.response]
 				: event.includes('?>') && !(event instanceof Array)
 				? `${config.response[responseKey as keyof typeof config.response]} ${event.split('?>')[1]}`
+=======
+		prefix?: string,
+	): Promise<proto.WebMessageInfo> | void => {
+		const resultResponse =
+			typeof event === 'boolean'
+				? (config.response as Record<string, string[] | string | number>)[responseKey]
+				: event.includes('?>')
+				? `${(config.response as Record<string, string[] | string | number>)[responseKey]} ${
+						event.split('?>')[1]
+				  }`
+>>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 				: event;
 		if (resultResponse === '--noresp') return;
 		return client.reply(
 			mess,
+<<<<<<< HEAD
 			(() => {
 				const possiblyArray = ['mediaCustomReply'];
 				let result = '';
@@ -162,6 +206,81 @@ export default class CommandHandler {
 					};
 					return this.commandList[ev.event.index];
 				},
+=======
+			(!['wait'].includes(responseKey)
+				? resultResponse +
+				  (['owner'].includes(responseKey)
+						? prefix
+							? config.response.help.replace('</prefix>', prefix)
+							: ''
+						: '')
+				: resultResponse) as string,
+		);
+	};
+
+	public getAccess = (
+		mess: IProto,
+		event: ICommandContent,
+	): void | Promise<proto.WebMessageInfo> | 200 => {
+		let CONFIG!: [string | boolean, string];
+
+		if ((event.event as ICommand)?.query && event.query.length === 0)
+			CONFIG = [(event.event as ICommand).query!, 'query'];
+
+		if ((event.event as ICommand)?.group && !mess.validator.isGroup)
+			CONFIG = [(event.event as ICommand).group!, 'group'];
+
+		if ((event.event as ICommand)?.owner && !mess.validator.isOwner)
+			CONFIG = [(event.event as ICommand).owner!, 'owner'];
+
+		if (typeof CONFIG === 'object' && CONFIG.length > 0) {
+			return this.action(mess, CONFIG[0], CONFIG[1], event.prefix);
+		}
+
+		if ((event.event as ICommand)?.wait)
+			this.action(mess, (event.event as ICommand).wait as boolean | string, 'wait');
+		return 200;
+	};
+
+	private getCommand = (key: string): ICommandContent | {} => {
+		const content: ICommandContent = {} as ICommandContent;
+		const command = [];
+
+		for (const a of this.commandList) {
+			if (!a.enable) continue;
+			const prefix = a.prefix
+				? this.prefix
+						.filter((a) => (a as RegExp).test(key))
+						.sort((a, b) => b.toString().length - a.toString().length)[0]
+				: /^()/i;
+			if (!prefix) continue;
+			const noPrefix = key.replace(prefix, ''),
+				noPrefix_lower = noPrefix.toLowerCase();
+			const b = a.commandEXP
+				.filter((a) => (a as RegExp).test(noPrefix_lower))
+				.sort((a, b) => b.toString().length - a.toString().length)[0];
+			if (!b) continue;
+			command.push({
+				...a,
+				noPrefix,
+				noPrefix_lower,
+				prefix,
+				length: b.toString().length,
+				matched: b,
+			});
+		}
+
+		if (command.length === 0) return {};
+		content.event = command.sort((a, b) => b.length - a.length)[0];
+		content.text = key;
+		content.query = content.event.noPrefix.replace(content.event.matched, '').trim();
+		content.command = content.event.noPrefix.replace(content.query, '').trim().toLowerCase();
+		content.prefix = key.toLowerCase().split(content.command)[0];
+		content.modify = (property: ICommand) => {
+			this.commandList[(content.event as ICommand).index!] = {
+				...this.commandList[(content.event as ICommand).index!],
+				...property,
+>>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 			};
 		}
 		return ev;

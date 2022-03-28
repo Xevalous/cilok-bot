@@ -1,9 +1,9 @@
 import { exec } from 'child_process';
 
-global.command.on(
+command.on(
 	['>>', '=>>'],
 	['owner'],
-	async (mess, { client, text, command }) => {
+	async (mess, { text, command }) => {
 		const parse = command.includes('=>>') ? text.replace('=>>', 'return ') : text.replace('>>', '');
 		try {
 			const evaluate = await eval(`;(async () => {${parse} })()`).catch((e: unknown) => {
@@ -15,15 +15,16 @@ global.command.on(
 		}
 	},
 	{
-		owner: true,
+		owner: '--noresp',
+		wait: false,
 		prefix: false,
 	},
 );
 
-global.command.on(
+command.on(
 	['$$'],
 	['owner'],
-	async (mess, { client, query }) => {
+	async (mess, { query }) => {
 		try {
 			exec(`${query}`, (e, a) => {
 				if (e) return client.reply(mess, `${e}`);
@@ -35,6 +36,7 @@ global.command.on(
 	},
 	{
 		owner: '--noresp',
+		wait: false,
 		prefix: false,
 	},
 );
