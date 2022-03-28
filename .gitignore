@@ -1,6 +1,0 @@
-.env
-node_modules
-!commands/owner.ts
-test/*.ts
-commands/*.ts
-database/*.json

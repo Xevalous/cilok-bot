@@ -1,42 +1,35 @@
-import { IProto } from './client.declare';
+import { Proto } from './client.declare';
 
-export declare interface ICommand extends ICommandOptions {
-	name: string;
-	command: string[];
-	commandEXP: (string | RegExp)[];
-	tag: string[];
-	help: string;
-	index?: number;
-	callback: (
-		mess: IProto,
-		call: ICommandContent & {
-			client: typeof global.client;
-			util: typeof import('../utilities');
-			config: typeof global.config;
-		},
-	) => Promise<any> | any;
-	prefix: boolean;
-	enable: boolean;
-}
-
-export declare interface ICommandContent {
-	event:
-		| ICommand
-		| {
-				noPrefix: string;
-				noPrefix_lower: string;
-				prefix: string | RegExp;
-				length: number;
-				matched: string | RegExp;
-		  };
-	text: string;
-	query: string;
-	command: string;
-	prefix: string;
-	modify: (property: ICommand) => ICommand;
-}
-
-declare interface ICommandOptions {
-	owner?: boolean | string;
-	group?: boolean | string;
+export namespace ICommandHandler {
+	export interface Event extends AdditonalEvent {
+		name: string;
+		command: {
+			string: string[];
+			regExp: (string | RegExp)[];
+		};
+		tag: string[];
+		help: string;
+		index: number;
+		callback: (mess: Proto, property: CommandProperty) => Promise<any> | any;
+		prefix: boolean;
+		enable: boolean;
+	}
+	export interface AdditonalEvent {
+		/** Alternative commands will not appear in the menu, but it still can be executed */
+		alternativeCommand?: (string | RegExp)[];
+		mediaCustomReply?: string[] | string;
+		wait?: boolean | string;
+		query?: string;
+		owner?: boolean | string;
+		group?: boolean | string;
+	}
+	export interface CommandProperty {
+		event: Event;
+		text: string;
+		query: string;
+		command: string;
+		commandWithQuery: string;
+		prefix: string;
+		modify: (event: Event) => Event;
+	}
 }
