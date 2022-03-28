@@ -51,10 +51,7 @@ export function headers(additional?: AxiosRequestConfig, additionalHeaders?: Axi
 			'user-agent':
 				'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/99.0.1150.30',
 			'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="99", "Microsoft Edge";v="99"',
-<<<<<<< HEAD
 			dnt: 1,
-=======
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 			...additionalHeaders,
 		},
 		...additional,
@@ -64,14 +61,7 @@ export function headers(additional?: AxiosRequestConfig, additionalHeaders?: Axi
 export async function waVersion(): Promise<[number, number, number]> {
 	const defaultVersion: [number, number, number] = [2, 2022, 12];
 	try {
-<<<<<<< HEAD
 		const request: AxiosResponse = await axios.get('https://web.whatsapp.com/check-update?version=1&platform=web', headers());
-=======
-		const request: AxiosResponse = await axios.get(
-			'https://web.whatsapp.com/check-update?version=1&platform=web',
-			headers(),
-		);
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 		if (request.status === 200 && request.data?.currentVersion) {
 			return [
 				Number(request.data.currentVersion.split('.')[0]),
@@ -88,11 +78,7 @@ export async function waVersion(): Promise<[number, number, number]> {
 
 export function parseJson(
 	json: object,
-<<<<<<< HEAD
 	options?: {
-=======
-	options: {
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 		ignoreValue?: any[];
 		ignoreKey?: string[];
 		header?: string;
@@ -106,26 +92,15 @@ export function parseJson(
 		ignoreValue: [null, undefined],
 		ignoreKey: [],
 		header: '',
-<<<<<<< HEAD
 		body: `${global.config.unicode.bullet} *%key :* %value`,
 		footer: '━━━━━━━━━━━━━━━━━━━━',
-=======
-		body: `${global.config.unicode.list} *%key :* %value`,
-		footer: '------------',
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 		preResult: false,
 		...options,
 	};
 	const content: string[][] = [];
 	for (const [a, b] of Object.entries(json)) {
 		if (opt.ignoreValue.indexOf(b) !== -1) continue;
-<<<<<<< HEAD
 		const key = a.replace(/[A-Z_]/g, (a) => a.replace(a, ` ${a !== '_' ? a.toLowerCase() : ''}`)).replace(/^\w/, (c) => c.toUpperCase());
-=======
-		const key = a
-			.replace(/[A-Z_]/g, (a) => a.replace(a, ` ${a !== '_' ? a.toLowerCase() : ''}`))
-			.replace(/^\w/, (c) => c.toUpperCase());
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 		const type = typeof b;
 		if (opt.ignoreKey && (opt.ignoreKey as string[]).includes(a)) continue;
 		switch (type) {
@@ -152,13 +127,7 @@ export function parseJson(
 	}
 	if (opt.preResult) return content;
 	const compile: string[] = [
-<<<<<<< HEAD
 		opt.header === '' ? '' + '\n' : `${global.config.unicode.wings[0]}*${opt.header}*${global.config.unicode.wings[1]}\n`,
-=======
-		opt.header === ''
-			? '' + '\n'
-			: `${global.config.unicode.wings[0]}*${opt.header}*${global.config.unicode.wings[1]}\n`,
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 		content
 			.map((a) => {
 				return opt.body
@@ -224,13 +193,6 @@ export const logger = {
 	format: (message: any) => format(message),
 	info: (message: any) => console.log(`${chalk.blueBright.bold('INFO')} | ${format(message)}`),
 	warn: (message: any) => console.log(`${chalk.yellowBright.bold('WARNING')} | ${format(message)}`),
-<<<<<<< HEAD
 	command: (message: any) => console.log(`${chalk.hex('#6ca8fc').bold('COMMAND')} | ${format(message)}`),
 	database: (message: any) => console.log(`${chalk.magentaBright.bold('DATABASE')} | ${format(message)}`),
-=======
-	command: (message: any) =>
-		console.log(`${chalk.hex('#6ca8fc').bold('COMMAND')} | ${format(message)}`),
-	database: (message: any) =>
-		console.log(`${chalk.magentaBright.bold('DATABASE')} | ${format(message)}`),
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 };

@@ -13,11 +13,7 @@ export default async function CreateConnection() {
 		const socket = makeWASocket({
 			auth: state,
 			printQRInTerminal: true,
-<<<<<<< HEAD
 			browser: ['cilok-v2-md', 'Desktop', '3.0.0'],
-=======
-			browser: ['cilok-v2-md-debug-ts', 'Desktop', '2.0.1'],
->>>>>>> 6f7b9788bde00b8650952790b5877636250e90a1
 			version: await util.waVersion(),
 			logger: pino({
 				level: 'info',
