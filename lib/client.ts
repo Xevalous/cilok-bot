@@ -325,7 +325,7 @@ export default class Client {
 		return fallback(mess);
 	};
 
-	private prepareSticker = async (content: GetBuffer, exifPath?: string) => {
+	private prepareSticker = async (content: GetBuffer, exifPath?: string): Promise<Buffer> => {
 		try {
 			const bufferData = await this.getBuffer(content, util.autoPath(undefined, undefined, false)),
 				input = util.autoPath(undefined, bufferData.filename!),
