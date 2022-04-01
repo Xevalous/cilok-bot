@@ -7,7 +7,7 @@ import { headers } from './utilities';
 import { Readable } from 'stream';
 import { fromBuffer } from 'file-type';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
-import { GetBuffer, ButtonConfig, Content, Proto, StickerConfig } from './typings/client.declare';
+import { GetBuffer, ButtonConfig, Content, Proto } from './typings/client.declare';
 import * as baileys from '@adiwajshing/baileys';
 
 export default class Client {
@@ -63,18 +63,17 @@ export default class Client {
 				property as baileys.MiscMessageGenerationOptions,
 			);
 		} catch (e) {
-			throw util.logger.format(e);
+			throw e;
 		}
 	};
 
-	public sendSticker = async (mess: Proto, content: StickerConfig | Content): Promise<baileys.proto.WebMessageInfo> =>
-		this.send(mess, {
-			sticker: (await this.prepareSticker(
-				(content as StickerConfig).buffer,
-				(content as StickerConfig).exif ?? './src/misc/cilokS.exif',
-			)) as baileys.WAMediaUpload,
+	public sendSticker = async (mess: Proto, content: Content | { exif?: string }, buffer: Buffer) => {
+		return this.send(mess, {
+			sticker: (await this.prepareSticker(buffer, (content as { exif?: string }).exif ?? './src/misc/cilok.sticker.exif')) as baileys.WAMediaUpload,
+			quoted: mess,
 			...content,
 		});
+	};
 
 	public sendButton = async (mess: Proto, content: Content, buttons: ButtonConfig[]): Promise<baileys.proto.WebMessageInfo> => {
 		try {
@@ -122,7 +121,7 @@ export default class Client {
 				...{ [hasList ? 'sections' : 'templateButtons']: buttonsData },
 			});
 		} catch (e) {
-			throw util.logger.format(e);
+			throw e;
 		}
 	};
 
@@ -148,7 +147,7 @@ export default class Client {
 				filename,
 			);
 		} catch (e) {
-			throw util.logger.format(e);
+			throw e;
 		}
 	};
 
@@ -207,7 +206,7 @@ export default class Client {
 				...template,
 			};
 		} catch (e) {
-			throw util.logger.format(e);
+			throw e;
 		}
 	};
 
@@ -326,60 +325,58 @@ export default class Client {
 		return fallback(mess);
 	};
 
-	private prepareSticker = async (content: GetBuffer, exifPath: string) => {
+	private prepareSticker = async (content: GetBuffer, exifPath?: string) => {
 		try {
-			const bufferData = await this.getBuffer(content),
-				Buffer = bufferData.buffer;
-			const input = util.autoPath(bufferData.ext),
-				output = util.autoPath('webp');
-			if (!existsSync('./tmp')) mkdirSync('tmp');
-			writeFileSync(input, Buffer);
-
-			if (bufferData.ext === 'webp') {
+			const bufferData = await this.getBuffer(content, util.autoPath(undefined, undefined, false)),
+				input = util.autoPath(undefined, bufferData.filename!),
+				output = util.autoPath('webp', bufferData.filename?.split('.')[0]!);
+			if (!existsSync(config.tempDir)) mkdirSync(config.tempDir.split('/')[0]);
+			if (bufferData.ext === 'webp')
 				if (exifPath) {
-					return exec(`webpmux -set exif=${exifPath} ${input} ${input}`, (e) => {
-						if (e) throw e;
-						const saver = readFileSync(input);
-						unlinkSync(input);
-						return saver;
-					});
+					return new Promise((resolve) =>
+						exec(`webpmux -set exif=${exifPath} ${input} ${input}`, (e) => {
+							if (e) throw e;
+							const saver = readFileSync(input);
+							unlinkSync(input);
+							return resolve(saver);
+						}),
+					);
 				} else {
 					const saver = readFileSync(input);
 					unlinkSync(input);
 					return saver;
 				}
-			}
 
-			return Ffmpeg(input)
-				.on('error', (e) => {
-					unlinkSync(input);
-					throw util.logger.format(new Error(e));
-				})
-				.videoCodec('libwebp')
-				.addInputOptions([
-					'-vf',
-					"scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse",
-				])
-				.toFormat('webp')
-				.save(output)
-				.on('end', () => {
-					if (exifPath) {
-						return exec(`webpmux -set exif=${exifPath} ${output} ${output}`, (e) => {
-							if (e) throw util.logger.format(e);
-							const saver = readFileSync(output);
-							unlinkSync(input);
-							unlinkSync(output);
-							return saver;
-						});
-					} else {
-						const saver = readFileSync(output);
+			return new Promise((resolve) =>
+				Ffmpeg(input)
+					.on('error', (e) => {
 						unlinkSync(input);
-						unlinkSync(output);
-						return saver;
-					}
-				});
+						throw e;
+					})
+					.videoCodec('libwebp')
+					.videoFilter(
+						"scale='min(320,iw)':min'(320,ih)':force_original_aspect_ratio=decrease,fps=15, pad=320:320:-1:-1:color=white@0.0, split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse",
+					)
+					.toFormat('webp')
+					.save(output)
+					.on('end', () => {
+						unlinkSync(input);
+						if (exifPath) {
+							return exec(`webpmux -set exif ${exifPath} ${output} -o ${output}`, (e) => {
+								if (e) throw e;
+								const saver = readFileSync(output);
+								unlinkSync(output);
+								return resolve(saver);
+							});
+						} else {
+							const saver = readFileSync(output);
+							unlinkSync(output);
+							return resolve(saver);
+						}
+					}),
+			);
 		} catch (e) {
-			throw util.logger.format(e);
+			throw e;
 		}
 	};
 }
