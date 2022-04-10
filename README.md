@@ -1,4 +1,4 @@
-# Cilok-Bot 2.0.1 - MD
+# Cilok-Bot 3.0.0 - MD
 
 ## Documentation
 https://vexg.github.io/cilok-v2-md/
