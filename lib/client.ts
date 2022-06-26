@@ -1,81 +1,110 @@
+import P from 'pino';
+import path from 'path';
 import core from 'file-type/core';
 import axios from 'axios';
 import Ffmpeg from 'fluent-ffmpeg';
-import { Agent } from 'https';
 import { exec } from 'child_process';
-import { headers } from './utilities';
-import { Readable } from 'stream';
+import { Agent } from 'https';
+import { Readable } from 'form-data';
 import { fromBuffer } from 'file-type';
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
-import { GetBuffer, ButtonConfig, Content, Proto } from './typings/client.declare';
-import * as baileys from '@adiwajshing/baileys';
+import { eventHandler, scheduleHandler } from './event';
+import { ButtonConfig, Content, GetBuffer, Metadata } from './typings';
+import * as fs from 'fs';
+import makeWASocket, * as baileys from '@adiwajshing/baileys';
+import axiosRetry from 'axios-retry';
 
 export default class Client {
-	chats: {
-		[k: string]: any;
-	};
-	baileys: typeof baileys;
-	messageType: { [k: string]: string };
-	constructor(public socket: baileys.WASocket) {
-		this.chats = {};
-		this.baileys = baileys;
+	private static instance: Client;
+	private static socket: baileys.WASocket;
+	public readonly auth: ReturnType<typeof baileys.useSingleFileAuthState>;
+	public readonly messageType: Record<string, string>;
+	private constructor() {
+		this.auth = baileys.useSingleFileAuthState(path.join(config.path.database, 'session.json'));
 		this.messageType = Object.fromEntries(
 			Object.keys(baileys.proto)
 				.filter((a) => a.endsWith('Message') || a.includes('Conversation'))
 				.map((a) => {
 					const type = a[0].toLowerCase() + a.slice(1);
-					return [type.replace('Message', '').replace('conversation', 'text'), type];
+					return [type.replace('conversation', 'text').replace('Message', ''), type];
 				}),
 		);
 	}
 
-	public send = async (mess: Proto | string, content: Content): Promise<baileys.proto.WebMessageInfo> => {
+	public static async connect() {
+		try {
+			if (!Client.instance) Client.instance = new Client();
+			utilities.logger('info', 'Connecting to whatsapp...');
+			Client.socket = makeWASocket({
+				auth: Client.instance.auth.state,
+				printQRInTerminal: true,
+				version: (await baileys.fetchLatestBaileysVersion()).version,
+				browser: ['cilok-bot', 'Desktop', '3.1.0'],
+				logger: P({
+					level: process.env.NODE_ENV === 'dev' ? 'info' : 'silent',
+				}),
+			});
+			Promise.all([eventHandler(Client.instance), scheduleHandler()]);
+			return Client.instance;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	public get baileys() {
+		return baileys;
+	}
+	public get socket(): baileys.WASocket {
+		return Client.socket;
+	}
+
+	public async sendMessageFromContent(mess: Metadata, content: baileys.WAProto.IMessage & baileys.MessageGenerationOptionsFromContent) {
+		try {
+			const generate = this.baileys.generateWAMessageFromContent(typeof mess === 'object' ? mess.from! : mess, content, content);
+			await this.socket.relayMessage(generate.key.remoteJid!, generate.message!, {
+				messageId: generate.key.id!,
+			});
+			return generate;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	public async sendMessage(mess: Metadata | string, content: Content): Promise<baileys.proto.WebMessageInfo> {
 		try {
 			let property: Record<string, any> = content;
 
-			const type = Object.keys(property).find((a) => this.messageType[a]);
-			if (!type) throw util.logger.format(new Error('The type is not defined'));
-			const mediaKey = ['document', 'video', 'audio', 'image', 'sticker'];
+			const mediaType = Object.keys(property).find((v) => ['document', 'video', 'audio', 'image', 'sticker'].includes(v));
+			if (!(typeof property[mediaType as keyof baileys.AnyMessageContent] === 'object') && mediaType) {
+				const bufferData = await this.getBuffer(property[mediaType as keyof baileys.AnyMessageContent]);
 
-			if (!(typeof property[type as keyof baileys.AnyMessageContent] === 'object') && mediaKey.includes(type)) {
-				const bufferData = await this.getBuffer(property[type as keyof baileys.AnyMessageContent]);
-
-				if (type === 'image') {
+				if (mediaType === 'image') {
 					(property.caption as string) = property?.text ? property.text : property?.caption ? property.caption : '';
 					delete property?.text;
 				}
 
 				property = {
-					mimetype: (property?.mimetype ? property.mimetype : type === 'audio' ? 'audio/mpeg' : bufferData.mime) as string,
+					mimetype: (property?.mimetype ? property.mimetype : mediaType === 'audio' ? 'audio/mpeg' : bufferData.mime) as string,
 					fileName: (!property?.filename
 						? `${Date.now()}.${bufferData.ext}`
 						: property?.filename.includes('.')
 						? property.filename
 						: `${property.filename}.${bufferData.ext}`) as string,
 					...property,
-					[type]: bufferData.buffer,
+					[mediaType]: bufferData.buffer,
 				};
 			}
 
 			return this.socket.sendMessage(
-				typeof mess === 'object' ? mess.key.remoteJid! : mess,
+				typeof mess === 'object' ? mess.from! : mess,
 				property as baileys.AnyMessageContent,
 				property as baileys.MiscMessageGenerationOptions,
 			);
-		} catch (e) {
-			throw e;
+		} catch (err) {
+			throw err;
 		}
-	};
+	}
 
-	public sendSticker = async (mess: Proto, content: Content | { exif?: string }, buffer: Buffer) => {
-		return this.send(mess, {
-			sticker: (await this.prepareSticker(buffer, (content as { exif?: string }).exif ?? './src/misc/cilok.sticker.exif')) as baileys.WAMediaUpload,
-			quoted: mess,
-			...content,
-		});
-	};
-
-	public sendButton = async (mess: Proto, content: Content, buttons: ButtonConfig[]): Promise<baileys.proto.WebMessageInfo> => {
+	public async sendButton(mess: Metadata, content: Content, buttons: ButtonConfig[]): Promise<baileys.proto.WebMessageInfo> {
 		try {
 			function parseBtn(type: string, object: ButtonConfig) {
 				return 'title' in object
@@ -99,57 +128,64 @@ export default class Client {
 			let hasList = false;
 			let buttonsData: baileys.proto.IHydratedTemplateButton[] | baileys.proto.ISection[] = [];
 
-			for (const a of buttons) {
-				const type = Object.keys(a)
-					.find((c) => c !== 'value')
+			for (const v of buttons) {
+				const type = Object.keys(v)
+					.find((v) => v !== 'value')
 					?.toLowerCase();
-				const parse = type ? parseBtn(type, a) : undefined;
+				const parse = type ? parseBtn(type, v) : undefined;
 
-				if ('title' in a) {
+				if ('title' in v) {
 					hasList = true;
 					const rows: baileys.proto.IRow[] = [];
 					rows.push(parse as baileys.proto.IRow);
 					buttonsData.push({
 						rows,
-						title: a.title,
+						title: v.title,
 					});
 				} else buttonsData = (buttonsData as baileys.proto.IHydratedTemplateButton[]).concat(parse as baileys.proto.IHydratedTemplateButton[]);
 			}
 
-			return this.send(mess, {
+			return this.sendMessage(mess, {
 				...content,
 				...{ [hasList ? 'sections' : 'templateButtons']: buttonsData },
 			});
-		} catch (e) {
-			throw e;
+		} catch (err) {
+			throw err;
 		}
-	};
+	}
 
-	public reply = async (mess: Proto, text: string): Promise<baileys.proto.WebMessageInfo> =>
-		this.send(mess, { text: util.logger.format(text).trim(), quoted: mess });
+	public reply = async (mess: Metadata, text: string): Promise<baileys.proto.WebMessageInfo> =>
+		this.sendMessage(mess, { text: utilities.format(text).trim(), quoted: mess });
 
-	public throw = async (mess: Proto, error: any, command: string): Promise<baileys.proto.WebMessageInfo> => {
-		await this.send(config.ownerNumber[0] + '@s.whatsapp.net', {
-			text: `Error\nCommand: ${command}\n\n${error}`,
+	public throw = async (mess: Metadata, error: any, command: string): Promise<baileys.proto.WebMessageInfo> => {
+		await this.sendMessage(`${config.ownerNumber[0]}@s.whatsapp.net`, {
+			text: `Error\nFrom: ${mess.from}\nCommand: ${command}\n\n${utilities.format(error)}`,
 		});
-		return client.reply(mess, config.response.error);
+		return this.reply(
+			mess,
+			config.response.error +
+				(statusMessage
+					? `\n\nTerjadi masalah pada Cilok-Bot yang sedang berlangsung. silahkan ketik ${mess.string[0]}menu untuk melihat masalah yang terjadi.`
+					: ''),
+		);
 	};
 
-	downloadMessage = async (mess: Proto, filename?: string) => {
+	public async downloadContent(mess: Metadata, filename?: string) {
 		try {
 			const values = Object.values(this.messageType);
 			const type = Object.keys(mess).find((a) => values.includes(a) && !a.includes('senderKey') && !a.includes('context'));
+			if (!type) throw new Error('Message type not found');
 			return this.getBuffer(
 				await this.baileys.downloadContentFromMessage(
-					mess[type as keyof Proto] as baileys.DownloadableMessage,
-					(type as string).replace(/Message/i, '').trim() as baileys.MediaType,
+					mess[type as keyof Metadata] as baileys.DownloadableMessage,
+					type.replace(/Message/i, '').trim() as baileys.MediaType,
 				),
 				filename,
 			);
-		} catch (e) {
-			throw e;
+		} catch (err) {
+			throw err;
 		}
-	};
+	}
 
 	public getBuffer = async (
 		content: GetBuffer,
@@ -167,25 +203,32 @@ export default class Client {
 			else if (/^data:.?\/.?;base64,/i.test(content as string)) buffer = Buffer.from((content as string).split(',')[1], 'base64');
 			else if (/^https?:\/\//.test(content as string)) {
 				let httpsAgent = undefined;
-				if (/y2mate|streamable/gi.test(content as string))
+				if (/streamable/gi.test(content as string))
 					httpsAgent = new Agent({
 						rejectUnauthorized: false,
 					});
-
+				axiosRetry(axios, {
+					retries: 3,
+					retryDelay(retryCount) {
+						return retryCount * 2000;
+					},
+					// retryCondition(error) {
+					// 	throw error;
+					// },
+				});
 				buffer = (
 					await axios.get(
 						content as string,
-						headers({
+						utilities.headers({
 							responseType: 'arraybuffer',
 							httpsAgent,
 						}),
 					)
-				).data;
-			} else if (existsSync(content as string)) buffer = readFileSync(content as string);
+				)?.data;
+			} else if (fs.existsSync(content as string)) buffer = fs.readFileSync(content as string);
 			else if ((content as unknown as { _readableState: any })?._readableState) buffer = await this.baileys.toBuffer(content as Readable);
 			else if (typeof content === 'string') buffer = Buffer.from(content);
 			else buffer = Buffer.alloc(0);
-
 			const template = (await fromBuffer(buffer)) || {
 				ext: 'bin',
 				mime: 'application/octet-stream',
@@ -193,8 +236,7 @@ export default class Client {
 
 			if (filename) {
 				filename = autoFormat ? `${filename}.${template.ext}` : filename;
-				if (!existsSync(config.tempDir)) mkdirSync(config.tempDir.split('/')[1]);
-				writeFileSync(filename.includes(config.tempDir) ? filename : `${config.tempDir}${filename}`, buffer);
+				fs.writeFileSync(filename.includes(config.path.temp) ? filename : `${config.path.temp}${filename}`, buffer);
 				return {
 					filename,
 					buffer,
@@ -205,152 +247,37 @@ export default class Client {
 				buffer,
 				...template,
 			};
-		} catch (e) {
-			throw e;
+		} catch (err) {
+			throw err;
 		}
 	};
 
-	public metadata = (mess: baileys.proto.IWebMessageInfo): Promise<Proto> => {
-		async function fallback(mess: baileys.proto.IWebMessageInfo) {
-			const proto: Proto = {} as Proto;
-			proto.type = [
-				Object.keys(mess.message!)[0],
-				Object.keys(mess.message!).find((a) => {
-					const b = a.toString().toLowerCase();
-					return !b.includes('senderkey') && !b.includes('context');
-				}),
-			]; // [0] for realType else [1]
-			proto.message = proto.type[1] === 'ephemeralMessage' ? mess.message?.ephemeralMessage?.message : mess.message;
-			proto.data =
-				typeof mess.message![proto.type[1] as keyof baileys.proto.IMessage] === 'object'
-					? Object.keys(mess.message![proto.type[1] as keyof baileys.proto.IMessage]!).includes('contextInfo')
-						? Object.keys(mess.message![proto.type[1] as keyof baileys.proto.IMessage]!).concat(
-								Object.keys((mess.message![proto.type[1] as keyof baileys.proto.IMessage]! as Record<string, any>).contextInfo),
-						  )
-						: Object.keys(mess.message![proto.type[1] as keyof baileys.proto.IMessage]!)
-					: Object.keys(mess.message!);
-			proto.string =
-				proto.type[1] === 'conversation'
-					? mess.message?.conversation
-					: proto.data.includes('caption')
-					? (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage]!.caption
-					: proto.type[1] === 'extendedTextMessage'
-					? (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].text
-					: proto.type[1] === 'templateButtonReplyMessage'
-					? (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].selectedId
-					: proto.type[1] === 'listResponseMessage'
-					? (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].singleSelectReply.selectedRowId
-					: '';
-
-			proto.body = mess.message![proto.type[1] as keyof baileys.proto.IMessage];
-			proto.from = mess.key.remoteJid;
-			proto.validator = {
-				message: {
-					isText: proto.type[1] === 'conversation' || proto.type[1] === 'extendedTextMessage',
-					isMedia:
-						proto.type[1] === 'stickerMessage' ||
-						proto.type[1] === 'imageMessage' ||
-						proto.type[1] === 'audioMessage' ||
-						proto.type[1] === 'videoMessage' ||
-						proto.type[1] === 'documentMessage',
-				},
-				isOwner: false,
-				isGroup: proto.from!.includes('@g.us'),
-			};
-			proto.sender = {
-				name: mess.pushName,
-				jid: proto.validator.isGroup ? (mess.key.participant ? mess.key.participant : client.socket.user.id) : mess.key.remoteJid,
-			};
-			proto.validator.isOwner =
-				config.ownerNumber.includes(proto.sender.jid ? proto.sender.jid.split('@')[0].split(':')[0] : '') || (mess.key.fromMe ?? false);
-			proto.client = {
-				name: client.socket.user.name,
-				jid: client.socket.user.id.split(':')[0] + '@s.whatsapp.net',
-			};
-			proto.mentionedJid =
-				proto.data.includes('contextInfo') && proto.data.includes('mentionedJid')
-					? (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo.mentionedJid
-					: undefined;
-
-			proto.quotedMess =
-				proto.data.includes('contextInfo') && proto.data.includes('quotedMessage')
-					? ({
-							key: {
-								remoteJid: proto.from,
-								fromMe:
-									(mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo
-										.participant === client.socket.user.id,
-								id: (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo.stanzaId,
-								participant: (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo
-									.participant,
-							},
-							message: (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo
-								.quotedMessage,
-					  } as {
-							key: baileys.proto.IMessageKey;
-							message: baileys.proto.IMessage;
-					  } as Proto)
-					: undefined;
-			proto.groupData = proto.validator.isGroup ? (await client.socket.groupMetadata(proto.from!)) ?? undefined : undefined;
-			proto.util = {
-				downloadMess: async (filename) => await client.downloadMessage(proto.message! as Proto, filename!),
-				deleteMess: (forAll = true) => {
-					if (forAll) {
-						return client.socket.sendMessage(proto.from!, {
-							delete: {
-								fromMe: true,
-								id: mess.key.id,
-								participant: mess.key.remoteJid,
-							},
-						});
-					} else {
-						return client.socket.sendMessage(proto.from!, {
-							delete: {
-								fromMe: true,
-								id: mess.key.id,
-								participant: mess.key.remoteJid,
-							},
-						});
-					}
-				},
-			};
-			proto.quotedMess = proto.quotedMess
-				? (((client.chats as Record<string, object>)[mess.key.remoteJid!] &&
-						(client.chats as Record<string, { messages: Record<string, object> }>)[mess.key.remoteJid!].messages[
-							(proto.quotedMess as Proto).key.id!
-						]) as Proto) || (await fallback(proto.quotedMess! as Proto))
-				: undefined;
-			return { ...mess, ...proto };
-		}
-		return fallback(mess);
-	};
-
-	private prepareSticker = async (content: GetBuffer, exifPath?: string): Promise<Buffer> => {
+	public prepareSticker = async (content: GetBuffer, exifPath?: string): Promise<Buffer> => {
 		try {
-			const bufferData = await this.getBuffer(content, util.autoPath(undefined, undefined, false)),
-				input = util.autoPath(undefined, bufferData.filename!),
-				output = util.autoPath('webp', bufferData.filename?.split('.')[0]!);
-			if (!existsSync(config.tempDir)) mkdirSync(config.tempDir.split('/')[0]);
+			const bufferData = await this.getBuffer(content, utilities.autoPath(undefined, undefined, false)),
+				input = utilities.autoPath(undefined, bufferData.filename!),
+				output = utilities.autoPath('webp', bufferData.filename?.split('.')[0]!);
+			if (!fs.existsSync(config.path.temp)) fs.mkdirSync(config.path.temp.split('/')[0]);
 			if (bufferData.ext === 'webp')
 				if (exifPath) {
 					return new Promise((resolve) =>
-						exec(`webpmux -set exif=${exifPath} ${input} ${input}`, (e) => {
+						exec(`webpmux -set exif ${exifPath} ${input} -o ${input}`, (e) => {
 							if (e) throw e;
-							const saver = readFileSync(input);
-							unlinkSync(input);
+							const saver = fs.readFileSync(input);
+							if (fs.existsSync(input)) fs.unlinkSync(input);
 							return resolve(saver);
 						}),
 					);
 				} else {
-					const saver = readFileSync(input);
-					unlinkSync(input);
+					const saver = fs.readFileSync(input);
+					if (fs.existsSync(input)) fs.unlinkSync(input);
 					return saver;
 				}
 
 			return new Promise((resolve) =>
 				Ffmpeg(input)
 					.on('error', (e) => {
-						unlinkSync(input);
+						if (fs.existsSync(input)) fs.unlinkSync(input);
 						throw e;
 					})
 					.videoCodec('libwebp')
@@ -360,23 +287,23 @@ export default class Client {
 					.toFormat('webp')
 					.save(output)
 					.on('end', () => {
-						unlinkSync(input);
+						if (fs.existsSync(input)) fs.unlinkSync(input);
 						if (exifPath) {
 							return exec(`webpmux -set exif ${exifPath} ${output} -o ${output}`, (e) => {
 								if (e) throw e;
-								const saver = readFileSync(output);
-								unlinkSync(output);
+								const saver = fs.readFileSync(output);
+								if (fs.existsSync(output)) fs.unlinkSync(output);
 								return resolve(saver);
 							});
 						} else {
-							const saver = readFileSync(output);
-							unlinkSync(output);
+							const saver = fs.readFileSync(output);
+							if (fs.existsSync(output)) fs.unlinkSync(output);
 							return resolve(saver);
 						}
 					}),
 			);
-		} catch (e) {
-			throw e;
+		} catch (err) {
+			throw err;
 		}
 	};
 }

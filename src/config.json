@@ -1,11 +1,18 @@
 {
-	"botName": "CilokBot",
-	"ownerName": "VEXG",
-	"ownerNumber": ["99999"],
-	"prefix": ["!"],
-	"tempDir": "./temp/",
+	"ownerNumber": ["6289679070459", "4365066999977", "436508448617777"],
+	"prefix": ["!", "#"],
+	"database": {
+		"postgresql": true
+	},
+	"path": {
+		"database": "./src/database/",
+		"temp": "./src/temp/",
+		"exif": "./src/misc/cilok.sticker.exif"
+	},
 	"unicode": {
+		"splitter": ";",
 		"bullet": "◈",
+		"dash": "━",
 		"wings": ["*❮*  ", "  *❯*"]
 	},
 	"response": {
@@ -14,13 +21,14 @@
 		"group": "*REJECTED* | Perintah ini hanya bisa di gunakan dalam grup",
 		"wait": "*WAIT* | Sedang di proses...",
 		"private": "*REJECTED* | Perintah ini hanya bisa di gunakan dalam private chat",
-		"notUrl": "*REJECTED* | Link Invalid",
-		"media": "*REJECTED* | Pesan harus bersifat media",
-		"mediaCustom": "*REJECTED* | Pesan harus bersifat",
-		"mediaCustomReply": "*REJECTED* | Kirim pesan / reply pesan yang bersifat",
+		"text": "*REJECTED* | Pesan harus berupa text",
+		"url": "*REJECTED* | Link Invalid",
+		"media": "*REJECTED* | Kirim / reply pesan media",
+		"mediaCustom": "*REJECTED* | Pesan harus berupa",
+		"mediaCustomReply": "*REJECTED* | Kirim / reply pesan yang berupa",
 		"mention": "*REJECTED* | Tag orang yang ingin di target",
 		"quoted": "*REJECTED* | Reply pesan yang ingin di target",
-		"quoted.custom": "*REJECTED* | Reply pesan yang bersifat",
+		"quotedCustom": "*REJECTED* | Reply pesan yang berupa",
 		"error": "*ERROR* | Terjadi kesalahan pada saat melakukan perintah",
 		"clientAdminRequired": "*PERMISSION* | Bot harus menjadi admin untuk melakukan perintah ini",
 		"spam": "*SPAM DETECTED* | Tunggu 5 detik agar bisa menggunakan command lagi",

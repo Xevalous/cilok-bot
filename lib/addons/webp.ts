@@ -2,9 +2,9 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { load } from 'cheerio';
 import { append, headers } from '../utilities';
-import { createReadStream } from 'fs';
+import { createReadStream, PathLike } from 'fs';
 
-export default async function webp2mp4(file: string): Promise<{ status: number; author: string; result: string }> {
+export default async function webp2mp4(file: PathLike): Promise<{ status: number; author: string; result: string }> {
 	try {
 		async function request(form: FormData, file = '') {
 			return axios.post(

@@ -1,16 +1,16 @@
-import { Proto } from './client.declare';
+import { Metadata } from './metadata';
 
 export namespace ICommandHandler {
 	export interface Event extends AdditonalEvent {
 		name: string;
 		command: {
 			string: string[];
-			regExp: (string | RegExp)[];
+			regExp: RegExp[];
 		};
 		tag: string[];
 		help: string;
 		index: number;
-		callback: (mess: Proto, property: CommandProperty) => Promise<any> | any;
+		callback: (mess: Metadata, property: CommandProperty) => Promise<any> | any;
 		prefix: boolean;
 		enable: boolean;
 	}
@@ -18,10 +18,16 @@ export namespace ICommandHandler {
 		/** Alternative commands will not appear in the menu, but it still can be executed */
 		alternativeCommand?: (string | RegExp)[];
 		mediaCustomReply?: string[] | string;
-		wait?: boolean | string;
+		quotedCustom?: string[] | string;
+		quoted?: boolean;
+		url?: boolean;
+		admin?: boolean;
+		clientAdminRequired?: boolean;
 		query?: string;
+		wait?: boolean | string;
 		owner?: boolean | string;
 		group?: boolean | string;
+		media?: boolean | string;
 	}
 	export interface CommandProperty {
 		event: Event;
@@ -32,4 +38,11 @@ export namespace ICommandHandler {
 		prefix: string;
 		modify: (event: Event) => Event;
 	}
+}
+
+export interface EventParser {
+	prefix: RegExp;
+	index: number;
+	commandWithQuery: string;
+	command: string;
 }

@@ -1,5 +1,5 @@
 echo "CILOK | Starting Installation..."
 npm i pnpm -g
-pnpm i typescript ts-node
-pnpm install -P
+pnpm i yarn -g
+pnpm install
 echo "CILOK | Installation complete"

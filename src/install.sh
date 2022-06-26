@@ -1,8 +1,9 @@
 #!/usr/bin/bash
-apt-get update && apt-get upgrade
+sudo apt-get update 
+sudo apt-get upgrade
 echo "CILOK | Starting Installation..."
-apt-get install git libwebp ffmpeg nodejs
+sudo apt-get install libwebp ffmpeg nodejs npm
 npm i pnpm -g
-pnpm i typescript ts-node
-pnpm install -P
+pnpm i yarn -g
+pnpm install
 echo "CILOK | Installation complete"
