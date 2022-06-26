@@ -1,7 +1,7 @@
 # Cilok-Bot - MD
 
 ## Documentation
-https://vexg.github.io/cilok-v2-md/
+https://vexg.github.io/cilok-v3/
 
 ## Requirements
 Note : You can skip this section if you using linux.
