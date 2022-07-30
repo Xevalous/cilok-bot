@@ -8,8 +8,8 @@ export namespace ICommandHandler {
 			regExp: RegExp[];
 		};
 		tag: string[];
-		help: string;
-		index: number;
+		help?: string;
+		index: number | null;
 		callback: (mess: Metadata, property: CommandProperty) => Promise<any> | any;
 		prefix: boolean;
 		enable: boolean;
@@ -30,7 +30,7 @@ export namespace ICommandHandler {
 		media?: boolean | string;
 	}
 	export interface CommandProperty {
-		event: Event;
+		instance: Event;
 		text: string;
 		query: string;
 		command: string;

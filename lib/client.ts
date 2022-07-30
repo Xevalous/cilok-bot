@@ -40,7 +40,7 @@ export default class Client {
 				version: (await baileys.fetchLatestBaileysVersion()).version,
 				browser: ['cilok-bot', 'Desktop', '3.1.0'],
 				logger: P({
-					level: process.env.NODE_ENV === 'dev' ? 'info' : 'silent',
+					level: 'info', //process.env.NODE_ENV === 'dev' ? 'info' : 'silent',
 				}),
 			});
 			Promise.all([eventHandler(Client.instance), scheduleHandler()]);
@@ -59,17 +59,17 @@ export default class Client {
 
 	public async sendMessageFromContent(mess: Metadata, content: baileys.WAProto.IMessage & baileys.MessageGenerationOptionsFromContent) {
 		try {
-			const generate = this.baileys.generateWAMessageFromContent(typeof mess === 'object' ? mess.from! : mess, content, content);
-			await this.socket.relayMessage(generate.key.remoteJid!, generate.message!, {
-				messageId: generate.key.id!,
+			const generatedContent = this.baileys.generateWAMessageFromContent(typeof mess === 'object' ? mess.from! : mess, content, content);
+			await this.socket.relayMessage(generatedContent.key.remoteJid!, generatedContent.message!, {
+				messageId: generatedContent.key.id!,
 			});
-			return generate;
+			return generatedContent;
 		} catch (err) {
 			throw err;
 		}
 	}
 
-	public async sendMessage(mess: Metadata | string, content: Content): Promise<baileys.proto.WebMessageInfo> {
+	public async sendMessage(mess: Metadata | string, content: Content): Promise<baileys.proto.WebMessageInfo | undefined> {
 		try {
 			let property: Record<string, any> = content;
 
@@ -104,9 +104,9 @@ export default class Client {
 		}
 	}
 
-	public async sendButton(mess: Metadata, content: Content, buttons: ButtonConfig[]): Promise<baileys.proto.WebMessageInfo> {
+	public async sendButton(mess: Metadata, content: Content, buttons: ButtonConfig[]): Promise<baileys.proto.WebMessageInfo | undefined> {
 		try {
-			function parseBtn(type: string, object: ButtonConfig) {
+			function parseButton(type: string, object: ButtonConfig) {
 				return 'title' in object
 					? ({
 							...object,
@@ -126,40 +126,40 @@ export default class Client {
 			}
 
 			let hasList = false;
-			let buttonsData: baileys.proto.IHydratedTemplateButton[] | baileys.proto.ISection[] = [];
+			let buttonData: baileys.proto.IHydratedTemplateButton[] | baileys.proto.ISection[] = [];
 
-			for (const v of buttons) {
-				const type = Object.keys(v)
+			for (const bc of buttons) {
+				const type = Object.keys(bc)
 					.find((v) => v !== 'value')
 					?.toLowerCase();
-				const parse = type ? parseBtn(type, v) : undefined;
+				const parse = type ? parseButton(type, bc) : undefined;
 
-				if ('title' in v) {
+				if ('title' in bc) {
 					hasList = true;
 					const rows: baileys.proto.IRow[] = [];
 					rows.push(parse as baileys.proto.IRow);
-					buttonsData.push({
+					buttonData.push({
 						rows,
-						title: v.title,
+						title: bc.title,
 					});
-				} else buttonsData = (buttonsData as baileys.proto.IHydratedTemplateButton[]).concat(parse as baileys.proto.IHydratedTemplateButton[]);
+				} else buttonData = (buttonData as baileys.proto.IHydratedTemplateButton[]).concat(parse as baileys.proto.IHydratedTemplateButton[]);
 			}
 
 			return this.sendMessage(mess, {
 				...content,
-				...{ [hasList ? 'sections' : 'templateButtons']: buttonsData },
+				...{ [hasList ? 'sections' : 'templateButtons']: buttonData },
 			});
 		} catch (err) {
 			throw err;
 		}
 	}
 
-	public reply = async (mess: Metadata, text: string): Promise<baileys.proto.WebMessageInfo> =>
+	public reply = async (mess: Metadata, text: string): Promise<baileys.proto.WebMessageInfo | undefined> =>
 		this.sendMessage(mess, { text: utilities.format(text).trim(), quoted: mess });
 
-	public throw = async (mess: Metadata, error: any, command: string): Promise<baileys.proto.WebMessageInfo> => {
+	public throw = async (mess: Metadata, error: any, command: string, additonal?: object): Promise<baileys.proto.WebMessageInfo | undefined> => {
 		await this.sendMessage(`${config.ownerNumber[0]}@s.whatsapp.net`, {
-			text: `Error\nFrom: ${mess.from}\nCommand: ${command}\n\n${utilities.format(error)}`,
+			text: `${utilities.wings('ERROR')}\n${utilities.parseJSON({ from: mess.from, command, ...additonal })}\n\n${utilities.format(error)}`,
 		});
 		return this.reply(
 			mess,
@@ -202,26 +202,23 @@ export default class Client {
 			if (Buffer.isBuffer(content)) buffer = content;
 			else if (/^data:.?\/.?;base64,/i.test(content as string)) buffer = Buffer.from((content as string).split(',')[1], 'base64');
 			else if (/^https?:\/\//.test(content as string)) {
-				let httpsAgent = undefined;
-				if (/streamable/gi.test(content as string))
-					httpsAgent = new Agent({
-						rejectUnauthorized: false,
-					});
 				axiosRetry(axios, {
 					retries: 3,
 					retryDelay(retryCount) {
-						return retryCount * 2000;
+						return retryCount * 5000;
 					},
-					// retryCondition(error) {
-					// 	throw error;
-					// },
+					onRetry(_, error, requestConfig) {
+						if (error.message.includes('first certificate'))
+							requestConfig.httpsAgent = new Agent({
+								rejectUnauthorized: false,
+							});
+					},
 				});
 				buffer = (
 					await axios.get(
 						content as string,
 						utilities.headers({
 							responseType: 'arraybuffer',
-							httpsAgent,
 						}),
 					)
 				)?.data;

@@ -6,22 +6,28 @@
 <a href="#documentation" id="documentation" style="color: inherit; text-decoration: none;">
   <h2>Documentation</h2>
 </a>
-<p><a href="https://vexg.github.io/cilok-v2-md/">https://vexg.github.io/cilok-v2-md/</a></p>
+<p><a href="https://vexg.github.io/cilok-v3/">https://vexg.github.io/cilok-v3/</a></p>
 
-<a href="#requirements" id="requirements" style="color: inherit; text-decoration: none;">
-  <h2>Requirements</h2>
+<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+  <h2>Installation</h2>
 </a>
-<p>Note : You can skip this section if you using linux.</p>
+
+<a href="#note" id="note" style="color: inherit; text-decoration: none;">
+  <h4>Note</h4>
+</a>
+<ul>
+<li>This source code using <a href="https://pnpm.io/">pnpm</a> as primary dependencies manager. <a href="https://pnpm.io/motivation">Learn more</a></li>
+<li>You can skip this section if you using heroku.</li>
+</ul>
+
+<a href="#requirements-skip-this-section-if-you-are-using-linux" id="requirements-skip-this-section-if-you-are-using-linux" style="color: inherit; text-decoration: none;">
+  <h3>Requirements (Skip this section if you are using linux)</h3>
+</a>
 <ul>
 <li><a href="https://nodejs.org/en/">Node.js</a></li>
 <li><a href="https://github.com/BtbN/FFmpeg-Builds/releases">Ffmpeg</a></li>
 <li><a href="https://storage.googleapis.com/downloads.webmproject.org/releases/webp/index.html">Libwebp</a></li>
 </ul>
-
-<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
-  <h2>Installation</h2>
-</a>
-<p>Note : This source code using <a href="https://pnpm.io/">pnpm</a> as primary dependencies manager (Except Heroku). <a href="https://pnpm.io/motivation">Learn more</a></p>
 
 <a href="#for-linux" id="for-linux" style="color: inherit; text-decoration: none;">
   <h3>For Linux</h3>
@@ -35,15 +41,28 @@
 <pre><code><span class="hl-0">start</span><span class="hl-1"> ./</span><span class="hl-0">src</span><span class="hl-1">/</span><span class="hl-0">install</span><span class="hl-1">.</span><span class="hl-0">bat</span>
 </code></pre>
 
+<a href="#heroku" id="heroku" style="color: inherit; text-decoration: none;">
+  <h2>Heroku</h2>
+</a>
+
+<a href="#buildpacks" id="buildpacks" style="color: inherit; text-decoration: none;">
+  <h3>Buildpacks</h3>
+</a>
+<ul>
+<li>heroku/nodejs</li>
+<li><a href="https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git">https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git</a></li>
+<li><a href="https://github.com/clhuang/heroku-buildpack-webp-binaries.git">https://github.com/clhuang/heroku-buildpack-webp-binaries.git</a></li>
+</ul>
+
 <a href="#starting-the-bot" id="starting-the-bot" style="color: inherit; text-decoration: none;">
   <h2>Starting the BOT</h2>
 </a>
 
-<a href="#before-start" id="before-start" style="color: inherit; text-decoration: none;">
-  <h3>Before start</h3>
+<a href="#config" id="config" style="color: inherit; text-decoration: none;">
+  <h3>Config</h3>
 </a>
 <ul>
-<li>From &quot;-.env&quot; rename to &quot;.env&quot; in <code>src directory</code> and fill the value in that file.</li>
+<li>From &quot;-.env&quot; rename to &quot;.env&quot; in <code>src</code> and fill the value in that file.</li>
 <li>Fill your client number (Optional) &amp; your other / primary number in <a href="https://github.com/VEXG/cilok-v2-md/blob/f93ce0ec32b83ccc1f99f552346632808a6a33ae/src/cilok.config.json#L4"><code>config.json</code></a> to validate that you&#39;re the owner of the bot &amp; you can change the response message, unicode, etc if you want to.</li>
 </ul>
 
@@ -55,13 +74,12 @@
 <li>production<pre><code><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-0">build</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-0">start</span>
 </code></pre>
 </li>
-<li>development<pre><code><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-0">i</span><span class="hl-1"> </span><span class="hl-0">ts</span><span class="hl-1">-</span><span class="hl-0">node</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-0">dev</span>
+<li>development<pre><code><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-0">dev</span>
 </code></pre>
 </li>
 </ul>
 </li>
-<li>scan the QR to make a session. session, chats will be stored in <code>config.path.database</code></li>
+<li>scan the QR to make a session. session, chats will be stored in <code>src/database</code></li>
 <li>there will be some logs spamming because the logger level is set to <code>info</code>, you can change the value to <code>silent</code> in <a href="https://github.com/VEXG/cilok-v2-md/blob/f93ce0ec32b83ccc1f99f552346632808a6a33ae/lib/connection.ts#L19">here</a> to hide the spamming logs. <a href="https://github.com/pinojs/pino/blob/master/docs/api.md#loggerlevels-object">Learn more</a></li>
-<li>Done! you are successfully running the BOT. Type <code>-&gt;</code> in your chat to make sure its running perfectly ( make sure you&#39;re the owner of the bot )</li>
 </ul>
 </div></div><div class="col-4 col-menu menu-sticky-wrap menu-highlight"><nav class="tsd-navigation primary"><ul><li class="current"><a href="modules.html">Modules</a></li><li class=" tsd-kind-module"><a href="modules/client.html">client</a></li><li class=" tsd-kind-module"><a href="modules/command.html">command</a></li><li class=" tsd-kind-module"><a href="modules/database.html">database</a></li><li class=" tsd-kind-module"><a href="modules/event.html">event</a></li><li class=" tsd-kind-module"><a href="modules/metadata.html">metadata</a></li><li class=" tsd-kind-module"><a href="modules/typings.html">typings</a></li><li class=" tsd-kind-module"><a href="modules/utilities.html">utilities</a></li></ul></nav></div></div></div><footer class="with-border-bottom"><div class="container"><h2>Legend</h2><div class="tsd-legend-group"><ul class="tsd-legend"><li class="tsd-kind-namespace"><span class="tsd-kind-icon">Namespace</span></li><li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li><li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li><li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li><li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li></ul></div><h2>Settings</h2><p>Theme <select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></p></div></footer><div class="container tsd-generator"><p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div><div class="overlay"></div><script src="assets/main.js"></script></body></html>

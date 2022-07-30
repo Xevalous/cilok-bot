@@ -30,7 +30,7 @@ envConfig({
 		globalThis.statusMessage = '';
 		globalThis.config = config;
 		globalThis.utilities = utilities;
-		globalThis.nodeCache = new NodeCache({ useClones: false });
+		globalThis.nodeCache = new NodeCache({ useClones: false, stdTTL: 43200 });
 
 		utilities.Measure.start('database');
 		globalThis.database = await Database.connect(true);

@@ -25,24 +25,28 @@ export async function eventHandler(client: Client) {
 
 	client.socket.ev.on('messages.upsert', async (ev) => {
 		if (!Object.keys(ev.messages[0]).includes('message') || !Object.keys(ev.messages[0]).includes('key')) return;
-		if (!database.data?.chats) database.modify.set('chats', {});
+
+		if (!database.storage?.chats) database.storage.chats = {};
+		if (!database.storage?.chatsId) database.storage.chatsId = [];
+
 		const mess = await metadata(ev.messages[0]);
 		if (mess.type[0] === 'protocolMessage') client.socket.ev.emit('messages.delete', { keys: [mess.message?.protocolMessage?.key!] });
 		if (mess.key.id!.length < 20 || mess.from === 'status@broadcast') return;
-		nodeCache.set(mess.key.id!, mess);
 
-		// SOON: Remove isGroup validator
-		if (!_.has(database.data.chats, mess.from!) && mess.validator.isGroup) database.modify.set(`chats['${mess.from!}']`, {});
+		nodeCache.set(mess.key.id!, mess);
+		// TODO: Remove isGroup validator
+		if (!_.has(database.storage.chats, mess.from!) && mess.validator.isGroup) database.storage.chats[mess.from!] = {};
+		if (!database.storage.chatsId.includes(mess.from)) database.storage.chatsId.push(mess.from);
 
 		return Promise.all([client.socket.readMessages([mess.key]), command.emit(mess)]);
 	});
 
 	client.socket.ev.on('groups.update', async (ev) => {
-		if (database.data.chats[ev[0].id!]) database.modify.set(`chats['${ev[0].id}'].groupMetadata`, await client.socket.groupMetadata(ev[0].id!));
+		if (database.storage.chats[ev[0].id!]) database.storage.chats[`${ev[0].id}`].groupMetadata = await client.socket.groupMetadata(ev[0].id!);
 	});
 
 	client.socket.ev.on('group-participants.update', async (ev) => {
-		if (database.data.chats[ev.id]) database.modify.set(`chats['${ev.id}'].groupMetadata`, await client.socket.groupMetadata(ev.id));
+		if (database.storage.chats[ev.id]) database.storage.chats[`${ev.id}`].groupMetadata = await client.socket.groupMetadata(ev.id);
 	});
 
 	client.socket.ws.on('CB:call,,offer', async (ev: BinaryNode) => {

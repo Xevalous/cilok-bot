@@ -9,52 +9,52 @@ export default class CommandHandler {
 	constructor() {
 		this.commandList = [];
 		this.tag = {};
-		this.prefix = config.prefix.map((a) => (typeof a === 'string' ? new RegExp(`^(${utilities.parseRegex(a)})`, 'i') : a));
+		this.prefix = config.prefix.map((v) => (typeof v === 'string' ? new RegExp(`^(${utilities.parseRegex(v)})`, 'i') : v));
 	}
 
 	public on = (
 		command: (string | RegExp)[],
 		tag: string[],
 		callback: (mess: Metadata, property: ICommandHandler.CommandProperty) => Promise<any> | any,
-		additonal?: ICommandHandler.AdditonalEvent | ICommandHandler.Event,
+		commandConfig?: ICommandHandler.AdditonalEvent | ICommandHandler.Event,
 	): void => {
-		const ev: ICommandHandler.Event = {
+		const event: ICommandHandler.Event = {
 			name: command.map((v) => (typeof v === 'string' ? v : v.toString())).join('/'),
 			command: {
-				string: _.concat(command, additonal?.alternativeCommand ?? []).map((v) => (typeof v === 'string' ? v : v.toString())),
-				regExp: _.concat(command, additonal?.alternativeCommand ?? []).map((v) =>
+				string: _.concat(command, commandConfig?.alternativeCommand ?? []).map((v) => (typeof v === 'string' ? v : v.toString())),
+				regExp: _.concat(command, commandConfig?.alternativeCommand ?? []).map((v) =>
 					typeof v === 'string' ? new RegExp(`^(${utilities.parseRegex(v)})`, 'i') : v,
 				),
 			},
 			tag,
-			help: 'Tidak ada informasi bantuan!',
+			help: undefined,
 			wait: true,
 			prefix: true,
 			enable: true,
-			index: 0,
+			index: null,
 			callback,
-			...additonal,
+			...commandConfig,
 		};
 
-		for (const a of tag) {
-			this.tag[a] = this.tag[a] ? this.tag[a] : [];
-			this.tag[a].push(ev);
+		for (const k of tag) {
+			this.tag[k] = this.tag[k] ? this.tag[k] : [];
+			this.tag[k].push(event);
 		}
 
-		ev.index = this.commandList.length;
-		this.commandList.push(ev);
+		event.index = this.commandList.length;
+		this.commandList.push(event);
 	};
 
 	public emit = (mess: Metadata) => {
-		const ev = this.getCommand(_.deburr(mess.string));
+		const event = this.getCommand(_.deburr(mess.string));
 		try {
-			if (!ev) return;
-			const access = this.getAccess(mess, ev);
+			if (!event) return;
+			const access = this.getAccess(mess, event);
 			if (access === 200) {
-				ev.event.callback(mess, {
-					...ev,
+				event.instance.callback(mess, {
+					...event,
 				});
-				return ev;
+				return event;
 			}
 			return void 0;
 		} catch (err) {
@@ -70,7 +70,7 @@ export default class CommandHandler {
 			prefix?: string;
 			command?: string;
 		},
-	): Promise<proto.WebMessageInfo> | void => {
+	): Promise<proto.WebMessageInfo | undefined> | void => {
 		const resultResponse =
 			typeof event === 'boolean'
 				? config.response[responseKey as keyof typeof config.response]
@@ -108,29 +108,29 @@ export default class CommandHandler {
 		);
 	};
 
-	private getAccess = (mess: Metadata, event: ICommandHandler.CommandProperty): void | Promise<proto.WebMessageInfo> | 200 => {
-		const eventType = event.event;
+	private getAccess = (mess: Metadata, event: ICommandHandler.CommandProperty): void | Promise<proto.WebMessageInfo | undefined> | 200 => {
+		const eventType = event.instance;
 		let CONFIG!: [string | string[] | boolean, string];
 
-		if (eventType?.query && event.query.length === 0) CONFIG = [eventType.query!, 'query'];
-		if (eventType?.group && !mess.validator.isGroup) CONFIG = [eventType.group!, 'group'];
-		if (eventType?.owner && !mess.validator.isOwner) CONFIG = [eventType.owner!, 'owner'];
-		if (eventType?.url && !utilities.url(event.query).isValid) CONFIG = [eventType.url!, 'url'];
-		if (eventType?.quoted && !mess.quoted) CONFIG = [eventType.quoted!, 'quoted'];
-		if (eventType?.media && !(mess.quoted?.validator.message.isMedia ?? mess.validator.message.isMedia)) CONFIG = [eventType.media!, 'media'];
+		if (eventType.query && event.query.trim().length < 1) CONFIG = [eventType.query, 'query'];
+		if (eventType.group && !mess.validator.isGroup) CONFIG = [eventType.group, 'group'];
+		if (eventType.owner && !mess.validator.isOwner) CONFIG = [eventType.owner, 'owner'];
+		if (eventType.url && !utilities.url(event.query).isValid) CONFIG = [eventType.url, 'url'];
+		if (eventType.quoted && !mess.quoted) CONFIG = [eventType.quoted, 'quoted'];
+		if (eventType.media && !(mess.quoted?.validator.message.isMedia ?? mess.validator.message.isMedia)) CONFIG = [eventType.media, 'media'];
 		if (
-			eventType?.group &&
+			eventType.group &&
 			typeof mess.groupMetadata?.participants.find((v) => v.id.normalizeJid() === mess.sender.jid?.normalizeJid())?.admin !== 'string'
 		)
 			CONFIG = [eventType.admin!, 'admin'];
 		if (
-			eventType?.group &&
+			eventType.group &&
 			typeof mess.groupMetadata?.participants.find((v) => v.id.normalizeJid() === mess.client.jid.normalizeJid())?.admin !== 'string'
 		)
 			CONFIG = [eventType.admin!, 'clientAdminRequired'];
 
 		if (
-			eventType?.mediaCustomReply &&
+			eventType.mediaCustomReply &&
 			!(eventType.mediaCustomReply instanceof Array
 				? eventType.mediaCustomReply.some((v) => v in client.messageType && client.messageType[v] === (mess.quoted?.type[1] ?? mess.type[1]))
 				: eventType.mediaCustomReply in client.messageType &&
@@ -138,7 +138,7 @@ export default class CommandHandler {
 		)
 			CONFIG = [eventType.mediaCustomReply, 'mediaCustomReply'];
 		if (
-			eventType?.quotedCustom &&
+			eventType.quotedCustom &&
 			!(eventType.quotedCustom instanceof Array
 				? eventType.quotedCustom.some((v) => v in client.messageType && client.messageType[v] === mess.quoted?.type[1])
 				: eventType.quotedCustom in client.messageType && client.messageType[eventType.quotedCustom] === mess.quoted?.type[1])
@@ -152,29 +152,28 @@ export default class CommandHandler {
 			});
 		}
 
-		if (eventType?.wait) this.action(mess, eventType.wait as boolean | string, 'wait');
+		if (eventType?.wait) this.action(mess, eventType.wait, 'wait');
 		return 200;
 	};
 
 	private getCommand = (text: string) => {
-		const eventParser = (ev: ICommandHandler.Event): EventParser | undefined => {
-			const prefix: RegExp | undefined = ev?.prefix
+		const eventParser = (event: ICommandHandler.Event): EventParser | undefined => {
+			const prefix: RegExp | undefined = event.prefix
 					? this.prefix.filter((v) => v.test(text)).sort((a, b) => b.toString().length - a.toString().length)[0]
 					: /^()/i,
-				index = ev.index,
+				index = event.index!,
 				commandWithQuery = text.replace(prefix, ''),
-				command: string | undefined = ev?.command.regExp.find((v) => v.test(commandWithQuery))?.exec(commandWithQuery)![0];
+				command = event.command.regExp.find((v) => v.test(commandWithQuery))?.exec(commandWithQuery);
 			if (!prefix || !command) return undefined;
-			return { prefix, index, commandWithQuery, command };
+			return { prefix, index, commandWithQuery, command: (command as RegExpExecArray)[0] };
 		};
 
 		const parser: EventParser[] = [];
-		let event: ICommandHandler.Event | ICommandHandler.Event[] = this.commandList.filter((v) => {
+		let instance: ICommandHandler.Event | ICommandHandler.Event[] = this.commandList.filter((v) => {
 			const validEvent = eventParser(v);
 			if (validEvent) parser.push(validEvent);
 			return v.enable && validEvent;
 		});
-		if (!event) return undefined;
 		const parsedEvent = parser.find(
 			(v) =>
 				v.command ===
@@ -183,18 +182,18 @@ export default class CommandHandler {
 					parser.map((v) => v.command),
 				),
 		);
-		if (!parsedEvent) return undefined;
-		event = event.find((v) => v.index === parsedEvent.index)!;
+		if (!parsedEvent || !instance) return undefined;
+		instance = instance.find((v) => v.index === parsedEvent.index)!;
 		return {
-			event,
+			instance,
 			text,
 			command: parsedEvent.command,
 			commandWithQuery: parsedEvent.commandWithQuery,
 			query: parsedEvent.commandWithQuery.replace(parsedEvent.command, '').trim(),
 			prefix: parsedEvent.prefix.exec(text)![0],
 			modify: (property: ICommandHandler.Event) => {
-				_.assign(this.commandList[(event as typeof property).index], property);
-				return this.commandList[(event as typeof property).index];
+				_.assign(this.commandList[(instance as typeof property).index!], property);
+				return this.commandList[(instance as typeof property).index!];
 			},
 		};
 	};

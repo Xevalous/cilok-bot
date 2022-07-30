@@ -49,13 +49,13 @@ export default async function metadata(mess: baileys.proto.IWebMessageInfo) {
 	};
 	proto.sender = {
 		name: mess.pushName,
-		jid: proto.validator.isGroup ? (mess.key.participant ? mess.key.participant : client.socket.user.id) : mess.key.remoteJid,
+		jid: proto.validator.isGroup ? (mess.key.participant ? mess.key.participant : client.socket.user?.id) : mess.key.remoteJid,
 	};
 	proto.validator.isOwner =
 		config.ownerNumber.includes(proto.sender.jid ? proto.sender.jid.replace(/\:[0-9]{2}/, '').split('@')[0] : '') || (mess.key.fromMe ?? false);
 	proto.client = {
-		name: client.socket.user.name,
-		jid: client.socket.user.id,
+		name: client.socket.user?.name,
+		jid: client.socket.user!.id,
 	};
 	proto.mentionedJid =
 		proto.data.includes('contextInfo') && proto.data.includes('mentionedJid')
@@ -68,7 +68,7 @@ export default async function metadata(mess: baileys.proto.IWebMessageInfo) {
 						remoteJid: proto.from,
 						fromMe:
 							(mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo.participant ===
-							client.socket.user.id,
+							client.socket.user?.id,
 						id: (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo.stanzaId,
 						participant: (mess.message as Record<keyof baileys.proto.IMessage, any>)[proto.type[1] as keyof baileys.proto.IMessage].contextInfo
 							.participant,
@@ -80,10 +80,10 @@ export default async function metadata(mess: baileys.proto.IWebMessageInfo) {
 					message: baileys.proto.IMessage;
 			  } as Metadata)
 			: undefined;
-	proto.groupMetadata = proto.validator.isGroup ? database.data.chats[proto.from!]?.groupMetadata ?? undefined : undefined;
+	proto.groupMetadata = proto.validator.isGroup ? database.storage.chats[proto.from!]?.groupMetadata ?? undefined : undefined;
 	if (proto.validator.isGroup && !proto.groupMetadata) {
 		proto.groupMetadata = await client.socket.groupMetadata(proto.from!);
-		if (_.has(database.data.chats, proto.from!)) database.modify.set(`chats['${proto.from!}'].groupMetadata`, proto.groupMetadata);
+		if (_.has(database.storage.chats, proto.from!)) database.storage.chats[`${proto.from!}`].groupMetadata = proto.groupMetadata;
 	}
 	proto.utilities = {
 		downloadMess: async (filename) => await client.downloadContent(proto.message! as Metadata, filename!),

@@ -1,14 +1,14 @@
 import _ from 'lodash';
 import path from 'path';
-import * as fs from 'fs';
 import { Pool } from 'pg';
+import * as fs from 'fs';
 
 export default class Database {
 	private static instance: Database;
 	private static PG: Pool;
-	private DB: Record<string, any>;
+	public storage: Partial<Record<string, any>>;
 	private constructor() {
-		this.DB = {};
+		this.storage = {};
 	}
 
 	public static async connect(usePgsql: boolean): Promise<Database> {
@@ -20,24 +20,14 @@ export default class Database {
 				await this.instance.PGHandler();
 			} else {
 				utilities.logger('database', 'Using local database');
-				for (const v of fs.readdirSync(config.path.database)) (await import(path.join(path.resolve('.'), './src/database', v))).default;
+				for (const v of fs.readdirSync(config.path.database))
+					Database.instance.storage[v.split('.')[0]] = (await import(path.join(path.resolve('.'), './src/database', v))).default;
 			}
-			utilities.logger('database', `Loaded ${Object.keys(Database.instance.DB).length} database(s)`);
+			utilities.logger('database', `Loaded ${Object.keys(Database.instance.storage).length} database(s)`);
 			return Database.instance;
 		} catch (err) {
 			throw err;
 		}
-	}
-
-	public get data(): Partial<Record<string, any>> {
-		return this.DB;
-	}
-
-	public get modify() {
-		return {
-			set: (key: string, value: any) => _.set(this.DB, key, value),
-			remove: (key: string) => _.unset(this.DB, key),
-		};
 	}
 
 	private async PGHandler(): Promise<void> {
@@ -58,16 +48,18 @@ export default class Database {
 		await Database.PG.query(
 			'CREATE TABLE IF NOT EXISTS clk_database(tag varchar(100) PRIMARY KEY, data text); DELETE FROM clk_database WHERE data IS NULL;',
 		);
-		const DB = await Database.PG.query<{ tag: string; data: string }>('SELECT * FROM clk_database');
-		if (DB.rowCount > 0)
-			for (const v of DB.rows)
+		const data = await Database.PG.query<{ tag: string; data: string }>('SELECT * FROM clk_database');
+		if (data.rowCount > 0)
+			for (const v of data.rows) {
+				if (!v) continue;
 				if (v.tag === 'session') this.writeSession(v.data);
 				else
 					try {
-						this.DB[v.tag] = JSON.parse(v.data);
+						this.storage[v.tag] = JSON.parse(v.data);
 					} catch {
-						this.DB[v.tag] = v.data;
+						this.storage[v.tag] = v.data;
 					}
+			}
 		return void 0;
 	}
 
@@ -78,7 +70,7 @@ export default class Database {
 				? _.map(fs.readdirSync(config.path.database), (v) => [v.split('.')[0], fs.readFileSync(path.join(config.path.database, v), 'utf8')])
 				: Object.entries(
 						_.merge(
-							_.pickBy(this.DB, (v) => v),
+							_.pickBy(this.storage, (v) => v),
 							fs.existsSync(`${config.path.database}session.json`) && Database.PG
 								? {
 										session: fs.readFileSync(`${config.path.database}session.json`, 'utf8'),
@@ -87,10 +79,12 @@ export default class Database {
 						),
 				  );
 			data.forEach(async (v) => {
-				if (v[1])
+				if (v[1]) {
+					v[1] = typeof v[1] === 'string' ? v[1] : JSON.stringify(v[1]);
 					if (Database.PG)
 						await Database.PG.query('INSERT INTO clk_database(tag, data) VALUES($1, $2) ON CONFLICT (tag) DO UPDATE SET data = $2', [v[0], v[1]]);
-					else fs.writeFileSync(`${config.path.database}${v[0]}.json`, typeof v[1] === 'string' ? v[1] : JSON.stringify(v[1]));
+					else fs.writeFileSync(`${config.path.database}${v[0]}.json`, v[1]);
+				}
 			});
 			utilities.logger('database', 'Successfully saved database');
 			return void 0;
@@ -105,13 +99,14 @@ export default class Database {
 	}
 
 	public async writeDatabaseToLocal(): Promise<undefined> {
-		for (const k of Object.entries(this.DB))
+		for (const k of Object.entries(this.storage))
 			fs.writeFileSync(`${config.path.database}${k[0]}.${typeof k[1] === 'string' ? 'txt' : 'json'}`, JSON.stringify(k[1]));
 		return void 0;
 	}
 
-	public async deleteSessionFromPG(): Promise<undefined> {
-		await Database.PG.query('DELETE FROM clk_database WHERE tag = $1', ['session']);
+	public async deleteRow<T extends any[]>(...tag: T): Promise<undefined> {
+		if (!Database.PG) throw new Error('Must use PostgreSQL database');
+		for (const t of tag) await Database.PG.query('DELETE FROM clk_database WHERE tag = $1', [t]);
 		return void 0;
 	}
 }
